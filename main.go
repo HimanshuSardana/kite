@@ -19,11 +19,11 @@ func main() {
 	for _, f := range files {
 		filePath := filepath.Join(path, f.Name())
 		if !f.IsDir() && strings.HasSuffix(f.Name(), ".md") {
-			fmt.Printf("Found content: %s", f.Name())
+			fmt.Printf("Found content: %s\n", filePath)
 			htmlContent := convertToHtml(filePath)
 			htmlPath := strings.Replace(filePath, ".md", ".html", 1)
 			os.WriteFile(htmlPath, htmlContent, 0o777)
-			fmt.Printf("Wrote file: %s", htmlPath)
+			fmt.Printf("Wrote file: %s\n", htmlPath)
 		}
 	}
 }
