@@ -21,7 +21,7 @@ func main() {
 		if !f.IsDir() && strings.HasSuffix(f.Name(), ".md") {
 			fmt.Printf("Found content: %s", f.Name())
 			htmlContent := convertToHtml(filePath)
-			htmlPath := filePath + ".html"
+			htmlPath := strings.Replace(filePath, ".md", ".html", 1)
 			os.WriteFile(htmlPath, htmlContent, 0o777)
 			fmt.Printf("Wrote file: %s", htmlPath)
 		}
