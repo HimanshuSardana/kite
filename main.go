@@ -2,22 +2,40 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gomarkdown/markdown"
-	// "github.com/gomarkdown/markdown/html"
-	// "github.com/gomarkdown/markdown/parser"
 )
 
 func main() {
-	path := filepath.Join("./test.md")
+	path := filepath.Join("./content/")
+	files, err := os.ReadDir(path)
+	if err != nil {
+		log.Fatalf("Error %s", err)
+	}
+	for _, f := range files {
+		filePath := filepath.Join(path, f.Name())
+		if !f.IsDir() && strings.HasSuffix(f.Name(), ".md") {
+			fmt.Printf("Found content: %s", f.Name())
+			htmlContent := convertToHtml(filePath)
+			htmlPath := filePath + ".html"
+			os.WriteFile(htmlPath, htmlContent, 0o777)
+			fmt.Printf("Wrote file: %s", htmlPath)
+		}
+	}
+}
+
+func convertToHtml(path string) []byte {
 	mds, err := os.ReadFile(path)
 	if err != nil {
-		fmt.Println("Error %s", err)
+		log.Fatalf("Error %s", err)
 	}
 	md := []byte(mds)
 	html := markdown.ToHTML(md, nil, nil)
 
-	fmt.Printf("--- Markdown:\n%s\n\n--- HTML:\n%s\n", md, html)
+	// fmt.Printf("--- Markdown:\n%s\n\n--- HTML:\n%s\n", md, html)
+	return html
 }
