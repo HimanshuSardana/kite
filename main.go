@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"io/fs"
 	"log"
@@ -17,9 +18,10 @@ type Page struct {
 }
 
 func main() {
-	path := filepath.Join("./content/")
-	// outputPath := filepath.Join("./output/")
-	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+	contentDir := "./content"
+	outputDir := "./output"
+
+	err := filepath.WalkDir(contentDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -29,47 +31,62 @@ func main() {
 		}
 
 		if strings.HasSuffix(d.Name(), ".md") {
-			if err != nil {
-				log.Fatalf("Error: %s", err)
-			}
+			fmt.Println("Processing:", path)
+
 			htmlContent := convertToHtml(path)
 			newPage := Page{
-				Title:   "hello",
+				Title:   "hello", // you can customize this later
 				Content: template.HTML(htmlContent),
 			}
 
+			// Parse template once per file (could be optimized)
 			tmpl, err := template.ParseFiles("./layout.html")
 			if err != nil {
 				log.Fatalf("Error parsing template: %s", err)
 			}
 
-			outputFile, err := os.Create("./output.html")
+			// Compute relative path and output file path
+			relPath, err := filepath.Rel(contentDir, path)
+			if err != nil {
+				log.Fatalf("Error computing relative path: %s", err)
+			}
+			outputFilePath := filepath.Join(outputDir, strings.Replace(relPath, ".md", ".html", 1))
+
+			// Make sure the output directory exists
+			err = os.MkdirAll(filepath.Dir(outputFilePath), 0o755)
+			if err != nil {
+				log.Fatalf("Error creating directories: %s", err)
+			}
+
+			// Create the output file
+			outputFile, err := os.Create(outputFilePath)
 			if err != nil {
 				log.Fatalf("Error creating output file: %s", err)
 			}
-
 			defer outputFile.Close()
 
+			// Execute template
 			err = tmpl.Execute(outputFile, newPage)
 			if err != nil {
-				log.Fatalf("Error generating output content %s", err)
+				log.Fatalf("Error generating output content: %s", err)
 			}
 		}
+
 		return nil
 	})
 	if err != nil {
-		log.Fatalf("Error here: %s", err)
+		log.Fatalf("Error walking directory: %s", err)
 	}
+
+	fmt.Println("All files processed!")
 }
 
 func convertToHtml(path string) []byte {
-	mds, err := os.ReadFile(path)
+	md, err := os.ReadFile(path)
 	if err != nil {
-		log.Fatalf("Error %s", err)
+		log.Fatalf("Error reading %s: %s", path, err)
 	}
-	md := []byte(mds)
-	html := markdown.ToHTML(md, nil, nil)
 
-	// fmt.Printf("--- Markdown:\n%s\n\n--- HTML:\n%s\n", md, html)
+	html := markdown.ToHTML(md, nil, nil)
 	return html
 }
