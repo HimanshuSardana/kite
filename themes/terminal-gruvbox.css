@@ -1,0 +1,744 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Fira+Code:wght@300;400;500;600;700&display=swap");
+
+/* ─── Gruvbox Dark Palette ──────────────────────────────── */
+:root {
+  /* Gruvbox backgrounds */
+  --gb-bg-hard: #1d2021;
+  --gb-bg: #282828;
+  --gb-bg-soft: #32302f;
+  --gb-bg-1: #3c3836;
+  --gb-bg-2: #504945;
+  --gb-bg-3: #665c54;
+  --gb-bg-4: #7c6f64;
+
+  /* Gruvbox foregrounds */
+  --gb-fg: #ebdbb2;
+  --gb-fg-1: #d5c4a1;
+  --gb-fg-2: #bdae93;
+  --gb-fg-3: #a89984;
+
+  /* Gruvbox accent colors — bright variants */
+  --gb-red: #fb4934;
+  --gb-green: #b8bb26;
+  --gb-yellow: #fabd2f;
+  --gb-blue: #83a598;
+  --gb-purple: #d3869b;
+  --gb-aqua: #8ec07c;
+  --gb-orange: #fe8019;
+
+  /* Gruvbox accent colors — normal variants */
+  --gb-red-n: #cc241d;
+  --gb-green-n: #98971a;
+  --gb-yellow-n: #d79921;
+  --gb-blue-n: #458588;
+  --gb-purple-n: #b16286;
+  --gb-aqua-n: #689d6a;
+  --gb-orange-n: #d65d0e;
+
+  /* Semantic */
+  --bg: var(--gb-bg-hard);
+  --surface: var(--gb-bg);
+  --surface-2: var(--gb-bg-soft);
+  --surface-3: var(--gb-bg-1);
+  --border: var(--gb-bg-2);
+  --text: var(--gb-fg);
+  --text-dim: var(--gb-fg-2);
+  --text-muted: var(--gb-bg-4);
+  --accent: var(--gb-yellow);
+  --accent-2: var(--gb-orange);
+
+  /* All mono — terminal commitment */
+  --mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+
+  --radius: 2px;
+  --max-w: 740px;
+  --transition: 120ms ease;
+}
+
+/* ─── Reset ─────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+
+/* ─── Body ──────────────────────────────────────────────── */
+body {
+  margin: 0;
+  padding: 3rem 2rem 6rem;
+  background-color: var(--gb-bg-hard);
+  /* Subtle scanline texture */
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  color: var(--gb-fg);
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings:
+    "liga" 1,
+    "calt" 1;
+  cursor: default;
+}
+
+body > * {
+  max-width: var(--max-w);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ─── Headings ──────────────────────────────────────────── */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--mono);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+/* h1 — prompt style: yellow with # sigil */
+h1 {
+  font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+  font-weight: 700;
+  color: var(--gb-yellow);
+  margin-bottom: 0.5rem;
+  position: relative;
+  padding-left: 1.6rem;
+}
+
+h1::before {
+  content: "#";
+  position: absolute;
+  left: 0;
+  color: var(--gb-orange);
+  font-weight: 700;
+}
+
+/* h2 — ## green */
+h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 3rem;
+  color: var(--gb-green);
+  padding-left: 1.6rem;
+  position: relative;
+  border: none;
+}
+
+h2::before {
+  content: "##";
+  position: absolute;
+  left: 0;
+  color: var(--gb-bg-4);
+  font-weight: 400;
+  font-size: 0.9em;
+}
+
+/* h3 — ### aqua */
+h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  color: var(--gb-aqua);
+  padding-left: 2.1rem;
+  position: relative;
+}
+
+h3::before {
+  content: "###";
+  position: absolute;
+  left: 0;
+  color: var(--gb-bg-4);
+  font-weight: 400;
+  font-size: 0.85em;
+}
+
+/* h4 — #### blue */
+h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 1.6rem;
+  color: var(--gb-blue);
+  padding-left: 2.7rem;
+  position: relative;
+}
+
+h4::before {
+  content: "####";
+  position: absolute;
+  left: 0;
+  color: var(--gb-bg-4);
+  font-weight: 400;
+  font-size: 0.85em;
+}
+
+/* ─── Paragraphs ────────────────────────────────────────── */
+p {
+  margin: 1.2rem 0;
+  color: var(--gb-fg-1);
+  font-size: 0.95rem;
+}
+
+/* ─── Meta / Byline ─────────────────────────────────────── */
+.meta,
+time,
+.byline {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--gb-bg-4);
+  margin-bottom: 2rem;
+  letter-spacing: 0.02em;
+}
+
+/* Fake prompt prefix on time/meta */
+.meta::before,
+time::before {
+  content: "$ date --iso ";
+  color: var(--gb-green);
+}
+
+/* ─── Links ─────────────────────────────────────────────── */
+a {
+  color: var(--gb-blue);
+  text-decoration: none;
+  border-bottom: 1px solid var(--gb-blue-n);
+  transition:
+    color var(--transition),
+    border-color var(--transition);
+}
+
+a:hover {
+  color: var(--gb-aqua);
+  border-bottom-color: var(--gb-aqua);
+}
+
+/* ─── Lists ─────────────────────────────────────────────── */
+ul,
+ol {
+  margin: 1.2rem 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+ul li,
+ol li {
+  position: relative;
+  padding-left: 2rem;
+  margin: 0.4rem 0;
+  color: var(--gb-fg-1);
+  font-size: 0.95rem;
+}
+
+/* ul — orange arrow */
+ul li::before {
+  content: "->";
+  position: absolute;
+  left: 0;
+  color: var(--gb-orange);
+  font-weight: 500;
+}
+
+ol {
+  counter-reset: ol-counter;
+}
+ol li {
+  counter-increment: ol-counter;
+}
+
+/* ol — yellow brackets */
+ol li::before {
+  content: "[" counter(ol-counter) "]";
+  position: absolute;
+  left: 0;
+  color: var(--gb-yellow);
+  font-size: 0.8rem;
+  top: 0.08em;
+}
+
+/* ─── Horizontal Rule ───────────────────────────────────── */
+hr {
+  border: none;
+  margin: 2.5rem 0;
+  height: 1px;
+  background: none;
+  position: relative;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+}
+
+hr::before {
+  content: "# ────────────────────────────────────────────────────────";
+  color: var(--gb-bg-3);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+/* ─── Blockquote — purple, indented comment style ────────  */
+blockquote {
+  margin: 2rem 0;
+  padding: 0;
+  border: none;
+  background: none;
+  position: relative;
+}
+
+blockquote p {
+  margin: 0.3rem 0;
+  color: var(--gb-purple);
+  font-style: italic;
+  padding-left: 2rem;
+  position: relative;
+  font-size: 0.93rem;
+}
+
+blockquote p::before {
+  content: "//";
+  position: absolute;
+  left: 0;
+  color: var(--gb-bg-3);
+  font-style: normal;
+  font-weight: 500;
+}
+
+blockquote cite {
+  display: block;
+  margin-top: 0.5rem;
+  padding-left: 2rem;
+  font-size: 0.75rem;
+  color: var(--gb-bg-4);
+  font-style: normal;
+  position: relative;
+}
+
+blockquote cite::before {
+  content: "-- ";
+  color: var(--gb-bg-3);
+}
+
+/* ─── Tables ─────────────────────────────────────────────  */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.8rem 0;
+  font-size: 0.85rem;
+  font-family: var(--mono);
+  background: var(--gb-bg);
+  border: 1px solid var(--gb-bg-2);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+thead {
+  background: var(--gb-bg-1);
+}
+
+th {
+  text-align: left;
+  padding: 0.55rem 1rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--gb-yellow);
+  border-bottom: 1px solid var(--gb-bg-2);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+td {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--gb-bg-1);
+  color: var(--gb-fg-2);
+  vertical-align: top;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+tbody tr:hover td {
+  background: var(--gb-bg-1);
+  color: var(--gb-fg);
+}
+
+/* ─── Inline Code ───────────────────────────────────────── */
+code {
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  background: var(--gb-bg-1);
+  color: var(--gb-aqua);
+  padding: 0.12rem 0.38rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--gb-bg-3);
+}
+
+/* ─── Code Blocks ───────────────────────────────────────── */
+pre {
+  background: var(--gb-bg);
+  border: 1px solid var(--gb-bg-2);
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius);
+  margin: 1.8rem 0;
+  position: relative;
+}
+
+/* Fake terminal titlebar */
+pre::before {
+  content: "  ●  ●  ●    " attr(data-lang);
+  display: block;
+  background: var(--gb-bg-2);
+  padding: 0.4rem 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--gb-bg-4);
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--gb-bg-3);
+}
+
+/* Prompt before first line of code */
+pre code {
+  display: block;
+  background: none;
+  border: none;
+  padding: 1rem 1.2rem 1.1rem;
+  color: var(--gb-fg);
+  font-size: 0.87rem;
+  line-height: 1.65;
+  overflow-x: auto;
+}
+
+/* Syntax color classes */
+pre .kw {
+  color: var(--gb-red);
+  font-weight: 500;
+}
+pre .fn {
+  color: var(--gb-green);
+}
+pre .str {
+  color: var(--gb-yellow);
+}
+pre .num {
+  color: var(--gb-purple);
+}
+pre .cm {
+  color: var(--gb-bg-4);
+  font-style: italic;
+}
+pre .kv {
+  color: var(--gb-aqua);
+}
+pre .op {
+  color: var(--gb-orange);
+}
+pre .type {
+  color: var(--gb-blue);
+}
+
+/* ─── Images ─────────────────────────────────────────────  */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius);
+  border: 1px solid var(--gb-bg-2);
+  margin: 2rem auto;
+  filter: sepia(8%) saturate(90%);
+}
+
+figure {
+  margin: 2rem 0;
+}
+
+figcaption {
+  font-size: 0.75rem;
+  color: var(--gb-bg-4);
+  text-align: center;
+  margin-top: 0.6rem;
+}
+
+figcaption::before {
+  content: "# ";
+  color: var(--gb-bg-3);
+}
+
+/* ─── Callouts — comment-block style ────────────────────── */
+aside,
+.note,
+.callout {
+  background: var(--gb-bg);
+  border: 1px solid var(--gb-bg-3);
+  border-left: 3px solid var(--gb-yellow);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 0.9rem 1.1rem;
+  margin: 1.8rem 0;
+  font-size: 0.875rem;
+  color: var(--gb-fg-2);
+  position: relative;
+}
+
+aside strong,
+.callout strong {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gb-yellow);
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.callout.warn {
+  border-left-color: var(--gb-orange);
+}
+.callout.warn strong {
+  color: var(--gb-orange);
+}
+.callout.error {
+  border-left-color: var(--gb-red);
+}
+.callout.error strong {
+  color: var(--gb-red);
+}
+.callout.ok {
+  border-left-color: var(--gb-green);
+}
+.callout.ok strong {
+  color: var(--gb-green);
+}
+.callout.info {
+  border-left-color: var(--gb-blue);
+}
+.callout.info strong {
+  color: var(--gb-blue);
+}
+
+/* ─── Tags ───────────────────────────────────────────────  */
+.tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 0.18rem 0.5rem;
+  background: var(--gb-bg-1);
+  border: 1px solid var(--gb-bg-3);
+  border-radius: var(--radius);
+  color: var(--gb-fg-3);
+  margin-right: 0.35rem;
+  text-decoration: none;
+  border-bottom: none;
+  transition: all var(--transition);
+}
+
+.tag::before {
+  content: "#";
+  color: var(--gb-bg-4);
+  margin-right: 1px;
+}
+
+.tag:hover {
+  background: var(--gb-bg-2);
+  color: var(--gb-yellow);
+  border-color: var(--gb-yellow);
+  border-bottom: none;
+}
+
+/* ─── Navigation — shell PS1 style ──────────────────────── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 0 2.5rem;
+  border-bottom: 1px solid var(--gb-bg-2);
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+nav .logo {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--gb-fg);
+  text-decoration: none;
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* PS1 prompt segments */
+nav .logo .prompt-user {
+  color: var(--gb-green);
+}
+nav .logo .prompt-at {
+  color: var(--gb-fg-3);
+}
+nav .logo .prompt-host {
+  color: var(--gb-blue);
+}
+nav .logo .prompt-colon {
+  color: var(--gb-fg-3);
+}
+nav .logo .prompt-path {
+  color: var(--gb-yellow);
+}
+nav .logo .prompt-sign {
+  color: var(--gb-orange);
+  margin-left: 4px;
+}
+
+nav ul {
+  display: flex;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+nav ul li {
+  padding: 0;
+  margin: 0;
+}
+nav ul li::before {
+  display: none;
+}
+
+nav a {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--gb-fg-3);
+  text-decoration: none;
+  border-bottom: none;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius);
+  transition: all var(--transition);
+}
+
+nav a:hover {
+  color: var(--gb-fg);
+  background: var(--gb-bg-1);
+  border-bottom: none;
+}
+
+/* ─── Footer ─────────────────────────────────────────────  */
+footer {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--gb-bg-2);
+  font-size: 0.75rem;
+  color: var(--gb-bg-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+footer::before {
+  content: none;
+}
+
+.footer-prompt::before {
+  content: "$ exit # ";
+  color: var(--gb-green);
+}
+
+/* ─── Reading Progress — yellow ──────────────────────────  */
+.progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gb-yellow), var(--gb-orange));
+  z-index: 999;
+  width: 0%;
+  box-shadow: 0 0 8px rgba(250, 189, 47, 0.3);
+  transition: width 0.1s linear;
+}
+
+/* ─── Blinking cursor decoration ────────────────────────── */
+.cursor::after {
+  content: "█";
+  color: var(--gb-yellow);
+  animation: blink 1.1s step-end infinite;
+  margin-left: 2px;
+  font-weight: 400;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ─── Selection ──────────────────────────────────────────  */
+::selection {
+  background: var(--gb-bg-3);
+  color: var(--gb-yellow);
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────  */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--gb-bg-hard);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gb-bg-2);
+  border-radius: 1px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gb-bg-3);
+}
+
+/* ─── Abbr ───────────────────────────────────────────────  */
+abbr[title] {
+  border-bottom: 1px dashed var(--gb-bg-4);
+  cursor: help;
+  text-decoration: none;
+}
+
+/* ─── Responsive ─────────────────────────────────────────  */
+@media (max-width: 700px) {
+  body {
+    padding: 2rem 1rem 4rem;
+    font-size: 13.5px;
+  }
+  h1 {
+    font-size: 1.2rem;
+  }
+  h2 {
+    font-size: 1.05rem;
+  }
+  nav ul {
+    gap: 0;
+  }
+  footer {
+    flex-direction: column;
+  }
+}
+
+/* ─── Focus Accessibility ────────────────────────────────  */
+:focus-visible {
+  outline: 1px solid var(--gb-yellow);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}

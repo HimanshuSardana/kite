@@ -1,0 +1,634 @@
+@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap");
+
+/* ─── Everforest Dark Tokens ────────────────────────────── */
+:root {
+  /* Backgrounds — from the Everforest palette */
+  --bg0: #2d3130; /* hard bg */
+  --bg1: #343f3e; /* main bg */
+  --bg2: #3a4845; /* soft bg */
+  --bg3: #445055; /* visual select */
+  --bg4: #4c5a5a; /* grey-0 */
+  --bg5: #596461; /* grey-1 */
+
+  /* Foreground */
+  --fg: #d3c6aa; /* main text */
+  --fg-dim: #9da9a0; /* dimmed */
+  --fg-muted: #5a6f68; /* muted */
+
+  /* Everforest accent spectrum */
+  --red: #e67e80;
+  --orange: #e69875;
+  --yellow: #dbbc7f;
+  --green: #a7c080; /* primary accent */
+  --aqua: #83c092;
+  --blue: #7fbbb3;
+  --purple: #d699b6;
+
+  /* Semantic aliases */
+  --accent: var(--green);
+  --accent-2: var(--aqua);
+  --accent-dim: rgba(167, 192, 128, 0.1);
+  --accent-glow: rgba(167, 192, 128, 0.06);
+  --warn: var(--yellow);
+  --error: var(--red);
+
+  /* Borders */
+  --border: #404d49;
+  --border-soft: rgba(167, 192, 128, 0.08);
+
+  /* Typography */
+  --serif: "Crimson Pro", Georgia, serif;
+  --sans: "Familjen Grotesk", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius: 4px;
+  --max-w: 720px;
+  --transition: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Reset ─────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+
+/* ─── Body ──────────────────────────────────────────────── */
+body {
+  margin: 0;
+  padding: 3.5rem 2rem 6rem;
+  background-color: var(--bg1);
+  background-image:
+    radial-gradient(
+      ellipse 90% 40% at 50% -10%,
+      rgba(83, 192, 146, 0.04) 0%,
+      transparent 65%
+    ),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23a7c080' fill-opacity='0.018'%3E%3Ccircle cx='1' cy='1' r='1'/%3E%3C/g%3E%3C/svg%3E");
+  color: var(--fg);
+  font-family: var(--serif);
+  line-height: 1.82;
+  font-size: 19px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body > * {
+  max-width: var(--max-w);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ─── Headings ──────────────────────────────────────────── */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--sans);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  scroll-margin-top: 1.5rem;
+}
+
+h1 {
+  font-size: clamp(2.1rem, 5vw, 2.8rem);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--fg);
+  /* Subtle green shimmer on the heading */
+  text-shadow: 0 0 40px rgba(167, 192, 128, 0.18);
+}
+
+h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-top: 3.5rem;
+  color: var(--aqua);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 2.2rem;
+  color: var(--yellow);
+}
+
+h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-dim);
+  margin-top: 1.8rem;
+}
+
+/* ─── Paragraphs ────────────────────────────────────────── */
+p {
+  margin: 1.35rem 0;
+  color: var(--fg);
+}
+
+h1 + p {
+  font-size: 1.06rem;
+  color: #bfb99f;
+  line-height: 1.88;
+}
+
+/* Drop cap */
+h1 + p::first-letter {
+  font-size: 3.4rem;
+  font-style: italic;
+  float: left;
+  line-height: 0.82;
+  margin: 0.1em 0.1em 0 0;
+  color: var(--green);
+}
+
+/* ─── Meta / Byline ─────────────────────────────────────── */
+.meta,
+time,
+.byline {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-bottom: 2.6rem;
+}
+
+/* ─── Links ─────────────────────────────────────────────── */
+a {
+  color: var(--aqua);
+  text-decoration-line: underline;
+  text-decoration-color: rgba(131, 192, 146, 0.35);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition:
+    color var(--transition),
+    text-decoration-color var(--transition);
+}
+
+a:hover {
+  color: var(--green);
+  text-decoration-color: var(--green);
+}
+
+/* ─── Lists ─────────────────────────────────────────────── */
+ul,
+ol {
+  margin: 1.3rem 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+ul li,
+ol li {
+  position: relative;
+  padding-left: 1.6rem;
+  margin: 0.5rem 0;
+  color: var(--fg);
+}
+
+ul li::before {
+  content: "◆";
+  position: absolute;
+  left: 0;
+  font-size: 0.45rem;
+  top: 0.6em;
+  color: var(--green);
+}
+
+ol {
+  counter-reset: ol-counter;
+}
+ol li {
+  counter-increment: ol-counter;
+}
+ol li::before {
+  content: counter(ol-counter, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--fg-muted);
+  top: 0.28em;
+}
+
+/* ─── Horizontal Rule ───────────────────────────────────── */
+hr {
+  border: none;
+  margin: 3.5rem auto;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--border) 25%,
+    var(--border) 75%,
+    transparent
+  );
+  position: relative;
+}
+
+hr::after {
+  content: "❧";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+  background: var(--bg1);
+  padding: 0 0.6rem;
+}
+
+/* ─── Blockquote ────────────────────────────────────────── */
+blockquote {
+  margin: 2.5rem 0;
+  padding: 1.2rem 1.6rem;
+  background: var(--bg2);
+  border-left: 3px solid var(--green);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  position: relative;
+}
+
+blockquote::before {
+  content: "\201C";
+  font-family: var(--serif);
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--green);
+  opacity: 0.25;
+  position: absolute;
+  top: 0.1rem;
+  left: 1rem;
+  pointer-events: none;
+}
+
+blockquote p {
+  margin: 0;
+  font-style: italic;
+  font-size: 1.08rem;
+  color: #c4bb9e;
+  position: relative;
+  z-index: 1;
+}
+
+blockquote cite {
+  display: block;
+  margin-top: 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: var(--fg-muted);
+  font-style: normal;
+}
+
+/* ─── Tables ────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  font-size: 0.88rem;
+  font-family: var(--mono);
+  background: var(--bg2);
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+thead {
+  background: var(--bg3);
+}
+
+th {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  font-size: 0.67rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--aqua);
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+}
+
+td {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--fg-dim);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+tbody tr:hover td {
+  background: rgba(167, 192, 128, 0.04);
+}
+
+/* ─── Inline Code ───────────────────────────────────────── */
+code {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  background: var(--bg0);
+  color: var(--orange);
+  padding: 0.18rem 0.4rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  word-break: break-word;
+}
+
+/* ─── Code Blocks ───────────────────────────────────────── */
+pre {
+  background: var(--bg0);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  padding: 1.4rem 1.6rem;
+  overflow-x: auto;
+  border-radius: var(--radius);
+  margin: 2rem 0;
+  position: relative;
+}
+
+pre::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0.55rem;
+  right: 0.85rem;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--fg);
+  font-size: 0.87rem;
+  line-height: 1.7;
+}
+
+/* Everforest syntax-flavoured spans (optional, use with a highlighter) */
+pre .kw {
+  color: var(--red);
+}
+pre .fn {
+  color: var(--yellow);
+}
+pre .str {
+  color: var(--green);
+}
+pre .num {
+  color: var(--purple);
+}
+pre .cm {
+  color: var(--fg-muted);
+  font-style: italic;
+}
+pre .kv {
+  color: var(--aqua);
+}
+
+/* ─── Images ────────────────────────────────────────────── */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin: 2.5rem auto;
+}
+
+figure {
+  margin: 2.5rem 0;
+}
+
+figcaption {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+  text-align: center;
+  margin-top: 0.7rem;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Aside / Callout ───────────────────────────────────── */
+aside,
+.note,
+.callout {
+  background: var(--accent-dim);
+  border: 1px solid rgba(167, 192, 128, 0.22);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin: 2rem 0;
+  font-size: 0.9rem;
+  color: var(--fg-dim);
+}
+
+aside strong,
+.callout strong {
+  font-family: var(--mono);
+  font-size: 0.67rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--green);
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+/* Variant callout types */
+.callout.warn {
+  background: rgba(219, 188, 127, 0.08);
+  border-color: rgba(219, 188, 127, 0.25);
+}
+.callout.warn strong {
+  color: var(--yellow);
+}
+.callout.error {
+  background: rgba(230, 126, 128, 0.08);
+  border-color: rgba(230, 126, 128, 0.25);
+}
+.callout.error strong {
+  color: var(--red);
+}
+.callout.info {
+  background: rgba(127, 187, 179, 0.08);
+  border-color: rgba(127, 187, 179, 0.25);
+}
+.callout.info strong {
+  color: var(--blue);
+}
+
+/* ─── Tags ───────────────────────────────────────────────── */
+.tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--fg-muted);
+  margin-right: 0.4rem;
+  text-decoration: none;
+  transition: all var(--transition);
+}
+
+.tag:hover {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--accent-dim);
+  text-decoration: none;
+}
+
+/* ─── Navigation ─────────────────────────────────────────── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0 3rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 3.5rem;
+}
+
+nav .logo {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+nav .logo span {
+  color: var(--green);
+}
+
+nav ul {
+  display: flex;
+  gap: 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+nav ul li {
+  padding: 0;
+  margin: 0;
+}
+nav ul li::before {
+  display: none;
+}
+
+nav a {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+nav a:hover {
+  color: var(--aqua);
+  text-decoration: none;
+}
+
+/* ─── Footer ─────────────────────────────────────────────── */
+footer {
+  margin-top: 5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* ─── Reading Progress ───────────────────────────────────── */
+.progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--green), var(--aqua));
+  z-index: 999;
+  width: 0%;
+  box-shadow: 0 0 10px var(--accent-glow);
+  transition: width 0.1s linear;
+}
+
+/* ─── Selection ──────────────────────────────────────────── */
+::selection {
+  background: rgba(167, 192, 128, 0.22);
+  color: var(--fg);
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg0);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-muted);
+}
+
+/* ─── Abbr ───────────────────────────────────────────────── */
+abbr[title] {
+  border-bottom: 1px dotted var(--fg-muted);
+  cursor: help;
+  text-decoration: none;
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media (max-width: 700px) {
+  body {
+    padding: 2rem 1.3rem 4rem;
+    font-size: 17px;
+  }
+  h1 {
+    font-size: 1.9rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+  nav ul {
+    gap: 1.2rem;
+  }
+  nav {
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+  footer {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* ─── Focus Accessibility ─────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+  border-radius: var(--radius);
+}
