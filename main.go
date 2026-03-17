@@ -9,12 +9,17 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/adrg/frontmatter"
 	"github.com/gomarkdown/markdown"
 )
 
 type Page struct {
 	Title   string
 	Content template.HTML
+}
+
+type Frontmatter struct {
+	Title string `yaml:"title"`
 }
 
 func main() {
@@ -33,9 +38,9 @@ func main() {
 		if strings.HasSuffix(d.Name(), ".md") {
 			fmt.Println("Processing:", path)
 
-			htmlContent := convertToHtml(path)
+			title, htmlContent := convertToHtml(path)
 			newPage := Page{
-				Title:   "hello", // you can customize this later
+				Title:   title, // you can customize this later
 				Content: template.HTML(htmlContent),
 			}
 
@@ -81,12 +86,16 @@ func main() {
 	fmt.Println("All files processed!")
 }
 
-func convertToHtml(path string) []byte {
+func convertToHtml(path string) (string, []byte) {
 	md, err := os.ReadFile(path)
+	var matter Frontmatter
+	rest, err := frontmatter.Parse(strings.NewReader(string(md)), &matter)
 	if err != nil {
 		log.Fatalf("Error reading %s: %s", path, err)
 	}
 
-	html := markdown.ToHTML(md, nil, nil)
-	return html
+	fmt.Printf("Found post %s\n", matter.Title)
+
+	html := markdown.ToHTML(rest, nil, nil)
+	return matter.Title, html
 }
