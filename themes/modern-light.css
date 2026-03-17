@@ -328,28 +328,6 @@ aside strong,
   margin-bottom: 0.35rem;
 }
 
-/* ─── Tags ───────────────────────────────────────────────── */
-.tag {
-  display: inline-block;
-  font-family: var(--mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 0.22rem 0.55rem;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  color: var(--text-dim);
-  margin-right: 0.35rem;
-  text-decoration: none;
-  transition: all var(--transition);
-}
-
-.tag:hover {
-  background: var(--text);
-  color: var(--bg);
-  border-color: var(--text);
-}
-
 /* ─── Navigation ─────────────────────────────────────────── */
 nav {
   display: flex;
