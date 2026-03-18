@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"io/fs"
 	"log"
 	"net/http"
@@ -27,10 +28,15 @@ func main() {
 	contentDir := "./content"
 	outputDir := "./output"
 
+	themeName := "modern-light"
+
 	args := os.Args
 	if len(args) > 1 {
 		switch args[1] {
 		case "serve":
+
+			copyFile("./themes/"+themeName+".css", "./output/style.css")
+
 			fs := http.FileServer(http.Dir("./output/"))
 			http.Handle("/", fs)
 
@@ -70,7 +76,9 @@ func main() {
 			if err != nil {
 				log.Fatalf("Error computing relative path: %s", err)
 			}
-			outputFilePath := filepath.Join(outputDir, strings.Replace(relPath, ".md", ".html", 1))
+			// test.md -> test.html
+			// test.md -> test/index.html
+			outputFilePath := filepath.Join(outputDir, strings.Replace(relPath, ".md", "/index.html", 1))
 
 			err = os.MkdirAll(filepath.Dir(outputFilePath), 0o755)
 			if err != nil {
@@ -110,4 +118,25 @@ func convertToHtml(path string) (string, []byte) {
 
 	html := markdown.ToHTML(rest, nil, nil)
 	return matter.Title, html
+}
+
+func copyFile(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	if err := os.MkdirAll(filepath.Dir(dst), os.ModePerm); err != nil {
+		return err
+	}
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, in)
+	return err
 }
