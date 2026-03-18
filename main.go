@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io/fs"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,6 +27,22 @@ func main() {
 	contentDir := "./content"
 	outputDir := "./output"
 
+	args := os.Args
+	if len(args) > 1 {
+		switch args[1] {
+		case "serve":
+			fs := http.FileServer(http.Dir("./output/"))
+			http.Handle("/", fs)
+
+			log.Println("Serving on http://localhost:8000")
+
+			err := http.ListenAndServe(":8000", nil)
+			if err != nil {
+				log.Fatalf("Error occured %s\n", err)
+			}
+		}
+	}
+
 	err := filepath.WalkDir(contentDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -40,37 +57,32 @@ func main() {
 
 			title, htmlContent := convertToHtml(path)
 			newPage := Page{
-				Title:   title, // you can customize this later
+				Title:   title,
 				Content: template.HTML(htmlContent),
 			}
 
-			// Parse template once per file (could be optimized)
 			tmpl, err := template.ParseFiles("./layout.html")
 			if err != nil {
 				log.Fatalf("Error parsing template: %s", err)
 			}
 
-			// Compute relative path and output file path
 			relPath, err := filepath.Rel(contentDir, path)
 			if err != nil {
 				log.Fatalf("Error computing relative path: %s", err)
 			}
 			outputFilePath := filepath.Join(outputDir, strings.Replace(relPath, ".md", ".html", 1))
 
-			// Make sure the output directory exists
 			err = os.MkdirAll(filepath.Dir(outputFilePath), 0o755)
 			if err != nil {
 				log.Fatalf("Error creating directories: %s", err)
 			}
 
-			// Create the output file
 			outputFile, err := os.Create(outputFilePath)
 			if err != nil {
 				log.Fatalf("Error creating output file: %s", err)
 			}
 			defer outputFile.Close()
 
-			// Execute template
 			err = tmpl.Execute(outputFile, newPage)
 			if err != nil {
 				log.Fatalf("Error generating output content: %s", err)
