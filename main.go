@@ -7,17 +7,28 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/adrg/frontmatter"
 	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
+
+type TOCItem struct {
+	Level int
+	Text  string
+	ID    string
+}
 
 type Page struct {
 	Title   string
 	Content template.HTML
+	TOC     []TOCItem
 }
 
 type Frontmatter struct {
@@ -34,7 +45,6 @@ func main() {
 	if len(args) > 1 {
 		switch args[1] {
 		case "serve":
-
 			copyFile("./themes/"+themeName+".css", "./output/style.css")
 
 			fs := http.FileServer(http.Dir("./output/"))
@@ -61,10 +71,11 @@ func main() {
 		if strings.HasSuffix(d.Name(), ".md") {
 			fmt.Println("Processing:", path)
 
-			title, htmlContent := convertToHtml(path)
+			title, htmlContent, toc := convertToHtml(path)
 			newPage := Page{
 				Title:   title,
 				Content: template.HTML(htmlContent),
+				TOC:     toc,
 			}
 
 			tmpl, err := template.ParseFiles("./layout.html")
@@ -106,18 +117,46 @@ func main() {
 	fmt.Println("All files processed!")
 }
 
-func convertToHtml(path string) (string, []byte) {
+func convertToHtml(path string) (string, []byte, []TOCItem) {
 	md, err := os.ReadFile(path)
-	var matter Frontmatter
-	rest, err := frontmatter.Parse(strings.NewReader(string(md)), &matter)
 	if err != nil {
 		log.Fatalf("Error reading %s: %s", path, err)
 	}
 
-	fmt.Printf("Found post %s\n", matter.Title)
+	var matter Frontmatter
+	rest, err := frontmatter.Parse(strings.NewReader(string(md)), &matter)
+	if err != nil {
+		log.Fatalf("Error parsing frontmatter: %s", err)
+	}
 
-	html := markdown.ToHTML(rest, nil, nil)
-	return matter.Title, html
+	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
+	p := parser.NewWithExtensions(extensions)
+
+	doc := p.Parse(rest)
+
+	var toc []TOCItem
+
+	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
+		if heading, ok := node.(*ast.Heading); ok && entering {
+			text := extractText(heading)
+			id := string(heading.HeadingID)
+
+			toc = append(toc, TOCItem{
+				Level: heading.Level,
+				Text:  text,
+				ID:    id,
+			})
+		}
+		return ast.GoToNext
+	})
+
+	renderer := html.NewRenderer(html.RendererOptions{
+		Flags: html.CommonFlags,
+	})
+
+	output := markdown.Render(doc, renderer)
+
+	return matter.Title, output, toc
 }
 
 func copyFile(src, dst string) error {
@@ -139,4 +178,15 @@ func copyFile(src, dst string) error {
 
 	_, err = io.Copy(out, in)
 	return err
+}
+
+func extractText(h *ast.Heading) string {
+	var text string
+	ast.WalkFunc(h, func(node ast.Node, entering bool) ast.WalkStatus {
+		if leaf, ok := node.(*ast.Text); ok && entering {
+			text += string(leaf.Literal)
+		}
+		return ast.GoToNext
+	})
+	return text
 }
