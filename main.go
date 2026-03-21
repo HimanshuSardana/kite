@@ -31,6 +31,9 @@ type Page struct {
 	TOC     []TOCItem
 }
 
+type Post struct {
+	Title string
+}
 type Frontmatter struct {
 	Title string `yaml:"title"`
 }
@@ -38,6 +41,8 @@ type Frontmatter struct {
 func main() {
 	contentDir := "./content"
 	outputDir := "./output"
+
+	posts := make([]Post, 0)
 
 	themeName := "modern-light"
 
@@ -72,6 +77,8 @@ func main() {
 			fmt.Println("Processing:", path)
 
 			title, htmlContent, toc := convertToHtml(path)
+			posts = append(posts, Post{Title: title})
+			// fmt.Println("Appended post", posts)
 			newPage := Page{
 				Title:   title,
 				Content: template.HTML(htmlContent),
@@ -115,6 +122,8 @@ func main() {
 	}
 
 	fmt.Println("All files processed!")
+
+	fmt.Println(posts)
 }
 
 func convertToHtml(path string) (string, []byte, []TOCItem) {
