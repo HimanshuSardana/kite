@@ -7,10 +7,13 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
-	_ "net/http/pprof"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"time"
+
+	_ "net/http/pprof"
 
 	"github.com/adrg/frontmatter"
 	"github.com/gomarkdown/markdown"
@@ -35,7 +38,9 @@ type Post struct {
 	Title string
 }
 type Frontmatter struct {
-	Title string `yaml:"title"`
+	Title string   `yaml:"title"`
+	Date  string   `yaml:"date"`
+	Tags  []string `yaml:"tags"`
 }
 
 func main() {
@@ -64,6 +69,8 @@ func main() {
 		}
 	}
 
+	summaries := make([]PostSummary, 0)
+
 	err := filepath.WalkDir(contentDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -76,11 +83,19 @@ func main() {
 		if strings.HasSuffix(d.Name(), ".md") {
 			fmt.Println("Processing:", path)
 
-			title, htmlContent, toc := convertToHtml(path)
-			posts = append(posts, Post{Title: title})
+			matter, htmlContent, toc := convertToHtml(path)
+			slug := strings.TrimSuffix(d.Name(), ".md")
+			summaries = append(summaries, PostSummary{
+				Title: matter.Title,
+				Slug:  slug,
+				Date:  matter.Date,
+				Tags:  matter.Tags,
+			})
+
+			posts = append(posts, Post{Title: matter.Title})
 			// fmt.Println("Appended post", posts)
 			newPage := Page{
-				Title:   title,
+				Title:   matter.Title,
 				Content: template.HTML(htmlContent),
 				TOC:     toc,
 			}
@@ -124,9 +139,11 @@ func main() {
 	fmt.Println("All files processed!")
 
 	fmt.Println(posts)
+
+	renderHomePage(summaries, outputDir)
 }
 
-func convertToHtml(path string) (string, []byte, []TOCItem) {
+func convertToHtml(path string) (Frontmatter, []byte, []TOCItem) {
 	md, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("Error reading %s: %s", path, err)
@@ -165,7 +182,7 @@ func convertToHtml(path string) (string, []byte, []TOCItem) {
 
 	output := markdown.Render(doc, renderer)
 
-	return matter.Title, output, toc
+	return matter, output, toc
 }
 
 func copyFile(src, dst string) error {
@@ -198,4 +215,61 @@ func extractText(h *ast.Heading) string {
 		return ast.GoToNext
 	})
 	return text
+}
+
+type PostSummary struct {
+	Title string
+	Slug  string   // derived from filename, e.g. "my-post" from "my-post.md"
+	Date  string   // from frontmatter, e.g. "Mar 2026"
+	Tags  []string // from frontmatter (optional)
+}
+
+type HomePage struct {
+	SiteTitle  string
+	AuthorName string
+	AuthorRole string
+	AuthorBio  string
+	Year       int
+	Posts      []PostSummary // sorted newest-first
+}
+
+func renderHomePage(summaries []PostSummary, outputDir string) {
+	sort.Slice(summaries, func(i, j int) bool {
+		return summaries[i].Date > summaries[j].Date
+	})
+
+	for i, p := range summaries {
+		if t, err := time.Parse("2006-01-02", p.Date); err == nil {
+			summaries[i].Date = t.Format("Jan 2006")
+		}
+	}
+
+	data := HomePage{
+		SiteTitle:  "himanshu.co",
+		AuthorName: "Himanshu Sardana",
+		AuthorRole: "",
+		AuthorBio:  "",
+		Year:       time.Now().Year(),
+		Posts:      summaries,
+	}
+
+	tmpl, err := template.ParseFiles("./home.html")
+	if err != nil {
+		log.Fatalf("Error parsing home template: %s", err)
+	}
+
+	outPath := filepath.Join(outputDir, "index.html")
+	if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
+		log.Fatalf("Error creating output dir: %s", err)
+	}
+	f, err := os.Create(outPath)
+	if err != nil {
+		log.Fatalf("Error creating index.html: %s", err)
+	}
+	defer f.Close()
+
+	if err := tmpl.Execute(f, data); err != nil {
+		log.Fatalf("Error rendering home page: %s", err)
+	}
+	fmt.Println("Home page written to", outPath)
 }
