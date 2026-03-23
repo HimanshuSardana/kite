@@ -247,8 +247,8 @@ func renderHomePage(summaries []PostSummary, outputDir string) {
 	data := HomePage{
 		SiteTitle:  "himanshu.co",
 		AuthorName: "Himanshu Sardana",
-		AuthorRole: "",
-		AuthorBio:  "",
+		AuthorRole: "Student",
+		AuthorBio:  "20 y/o linux enthusiast & software engineer",
 		Year:       time.Now().Year(),
 		Posts:      summaries,
 	}

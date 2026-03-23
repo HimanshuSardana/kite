@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ .SiteTitle }}</title>
+    <link rel="stylesheet" href="/style.css" />
+    <style>
+      .post-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .post-list li {
+        padding: 0;
+        margin: 0;
+      }
+
+      .post-list li::before {
+        display: none;
+      }
+
+      .post-item {
+        display: grid;
+        gap: 0 1.8rem;
+        align-items: baseline;
+        padding: 0.85rem 0;
+        text-decoration: none;
+        color: inherit;
+        transition: opacity var(--transition);
+      }
+
+      .post-item:first-child {
+        border-top: 1px solid var(--border-soft);
+      }
+
+      .post-item:hover {
+        opacity: 0.6;
+        text-decoration: none;
+      }
+
+      .post-item:hover .post-title {
+        text-decoration-color: var(--text);
+      }
+
+      .post-date {
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        white-space: nowrap;
+        padding-top: 0.08em;
+      }
+
+      .post-title {
+        font-family: var(--serif);
+        font-size: 0.97rem;
+        font-weight: 400;
+        color: var(--text);
+        line-height: 1.5;
+        text-decoration-line: underline;
+        text-decoration-color: transparent;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 1px;
+        transition: text-decoration-color var(--transition);
+      }
+
+      .post-tags {
+        display: flex;
+        gap: 0.35rem;
+        margin-top: 0.3rem;
+        flex-wrap: wrap;
+      }
+
+      .empty {
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        letter-spacing: 0.06em;
+        padding: 2rem 0;
+      }
+
+      @media (max-width: 500px) {
+        .post-item {
+          grid-template-columns: 1fr;
+          gap: 0.2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a class="logo" href="/">{{ .SiteTitle }}</a>
+      <ul>
+        <li><a href="/about">About</a></li>
+        <li><a href="/feed.xml">RSS</a></li>
+      </ul>
+    </nav>
+
+    <div class="site-header">
+      <h1>{{ .AuthorName }}</h1>
+      <p class="role">{{ .AuthorRole }}</p>
+      <p class="intro">{{ .AuthorBio }}</p>
+    </div>
+
+    <main>
+      <p class="section-label">Writing</p>
+
+      {{ if .Posts }}
+      <ul class="post-list">
+        {{ range .Posts }}
+        <li>
+          <a class="post-item" href="/{{ .Slug }}/">
+            <span class="post-date">{{ .Date }}</span>
+            <span>
+              <span class="post-title">{{ .Title }}</span>
+              {{ if .Tags }}
+              <span class="post-tags">
+                {{ range .Tags }}
+                <span class="pill">{{ . }}</span>
+                {{ end }}
+              </span>
+              {{ end }}
+            </span>
+          </a>
+        </li>
+        {{ end }}
+      </ul>
+      {{ else }}
+      <p class="empty">No posts yet.</p>
+      {{ end }}
+    </main>
+
+    <footer>
+      <span>© {{ .Year }} {{ .AuthorName }}</span>
+      <span>Built with <a href="#">kite</a></span>
+    </footer>
+  </body>
+</html>
