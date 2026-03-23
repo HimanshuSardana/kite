@@ -20,6 +20,7 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
+	"gopkg.in/yaml.v3"
 )
 
 type TOCItem struct {
@@ -219,18 +220,18 @@ func extractText(h *ast.Heading) string {
 
 type PostSummary struct {
 	Title string
-	Slug  string   // derived from filename, e.g. "my-post" from "my-post.md"
-	Date  string   // from frontmatter, e.g. "Mar 2026"
-	Tags  []string // from frontmatter (optional)
+	Slug  string
+	Date  string
+	Tags  []string
 }
 
 type HomePage struct {
-	SiteTitle  string
-	AuthorName string
-	AuthorRole string
-	AuthorBio  string
+	SiteTitle  string `yaml:"siteTitle"`
+	AuthorName string `yaml:"authorName"`
+	AuthorRole string `yaml:"authorRole"`
+	AuthorBio  string `yaml:"authorBio"`
 	Year       int
-	Posts      []PostSummary // sorted newest-first
+	Posts      []PostSummary
 }
 
 func renderHomePage(summaries []PostSummary, outputDir string) {
@@ -244,13 +245,17 @@ func renderHomePage(summaries []PostSummary, outputDir string) {
 		}
 	}
 
-	data := HomePage{
-		SiteTitle:  "himanshu.co",
-		AuthorName: "Himanshu Sardana",
-		AuthorRole: "Student",
-		AuthorBio:  "20 y/o linux enthusiast & software engineer",
-		Year:       time.Now().Year(),
-		Posts:      summaries,
+	config, err := os.ReadFile("config.yaml")
+	if err != nil {
+		panic(err)
+	}
+	var data HomePage
+	err = yaml.Unmarshal(config, &data)
+	data.Posts = summaries
+	data.Year = time.Now().Year()
+
+	if err != nil {
+		panic(err)
 	}
 
 	tmpl, err := template.ParseFiles("./home.html")
