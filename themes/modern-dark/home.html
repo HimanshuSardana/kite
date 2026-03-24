@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ .SiteTitle }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0c0c0b;
+        --surface: #111110;
+        --border: #1e1e1c;
+        --border-2: #2a2a27;
+        --text: #e8e6e1;
+        --text-2: #8a8880;
+        --text-3: #3e3d3a;
+        --gold: #c9a96e;
+        --gold-dim: #7a6441;
+        --serif: "Cormorant", Georgia, serif;
+        --mono: "DM Mono", ui-monospace, monospace;
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--mono);
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+      }
+
+      /* subtle grain overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0.6;
+      }
+
+      /* ── Layout ── */
+      .page {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      /* ── Nav ── */
+      nav {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 2.4rem 0 0;
+        gap: 2rem;
+      }
+
+      nav a {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-3);
+        text-decoration: none;
+        transition: color 180ms ease;
+        position: relative;
+      }
+
+      nav a::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 1px;
+        background: var(--gold);
+        transition: width 200ms var(--ease);
+      }
+
+      nav a:hover {
+        color: var(--gold);
+      }
+
+      nav a:hover::after {
+        width: 100%;
+      }
+
+      /* ── Hero ── */
+      .hero {
+        padding: 5.5rem 0 4.5rem;
+        border-bottom: 1px solid var(--border);
+        position: relative;
+      }
+
+      /* decorative vertical line */
+      .hero::before {
+        content: "";
+        position: absolute;
+        left: -2rem;
+        top: 5.5rem;
+        bottom: 4.5rem;
+        width: 1px;
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          var(--gold-dim),
+          transparent
+        );
+        opacity: 0.5;
+      }
+
+      .hero-name {
+        font-family: var(--serif);
+        font-size: clamp(3rem, 9vw, 5rem);
+        font-weight: 300;
+        line-height: 1;
+        letter-spacing: 0.01em;
+        margin: 0 0 1.4rem;
+        color: var(--text);
+        animation: fadeUp 0.9s var(--ease) both;
+      }
+
+      .hero-name em {
+        font-style: italic;
+        color: var(--gold);
+        font-weight: 300;
+      }
+
+      .hero-role {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--text-3);
+        margin: 0 0 1.8rem;
+        animation: fadeUp 0.9s 0.1s var(--ease) both;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+      }
+
+      .hero-role::before {
+        content: "";
+        display: inline-block;
+        width: 20px;
+        height: 1px;
+        background: var(--gold-dim);
+      }
+
+      .hero-bio {
+        font-size: 0.8rem;
+        line-height: 1.9;
+        color: var(--text-2);
+        margin: 0;
+        max-width: 380px;
+        animation: fadeUp 0.9s 0.18s var(--ease) both;
+        font-weight: 300;
+        letter-spacing: 0.02em;
+      }
+
+      /* ── Writing section ── */
+      .writing-header {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        padding: 3rem 0 1.8rem;
+      }
+
+      .writing-label {
+        font-family: var(--mono);
+        font-size: 0.58rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold-dim);
+        white-space: nowrap;
+      }
+
+      .writing-rule {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      /* ── Post list ── */
+      .post-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .post-list li {
+        padding: 0;
+        margin: 0;
+      }
+
+      .post-item {
+        display: flex;
+        align-items: baseline;
+        gap: 1.8rem;
+        padding: 1.2rem 0;
+        text-decoration: none;
+        color: inherit;
+        border-bottom: 1px solid var(--border);
+        transition: border-color 200ms ease;
+        animation: fadeUp 0.6s var(--ease) both;
+        position: relative;
+      }
+
+      .post-item::before {
+        content: "";
+        position: absolute;
+        left: -2rem;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--gold);
+        transform: scaleY(0);
+        transition: transform 240ms var(--ease);
+        transform-origin: top;
+      }
+
+      .post-item:hover::before {
+        transform: scaleY(1);
+      }
+
+      .post-item:hover .post-title {
+        color: var(--gold);
+      }
+
+      .post-item:hover .post-date {
+        color: var(--text-2);
+      }
+
+      .post-date {
+        font-family: var(--mono);
+        font-size: 0.57rem;
+        letter-spacing: 0.08em;
+        color: var(--text-3);
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding-top: 0.15em;
+        min-width: 5.5rem;
+        transition: color 200ms ease;
+      }
+
+      .post-right {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .post-title {
+        font-family: var(--serif);
+        font-size: 1.1rem;
+        font-weight: 300;
+        color: var(--text);
+        line-height: 1.4;
+        display: block;
+        letter-spacing: 0.01em;
+        transition: color 200ms ease;
+      }
+
+      .post-tags {
+        display: flex;
+        gap: 0.3rem;
+        margin-top: 0.45rem;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 0.54rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.18rem 0.5rem;
+        background: transparent;
+        border: 1px solid var(--border-2);
+        border-radius: 2px;
+        color: var(--text-3);
+      }
+
+      /* ── Empty state ── */
+      .empty {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        color: var(--text-3);
+        letter-spacing: 0.1em;
+        padding: 3rem 0;
+      }
+
+      /* ── Footer ── */
+      footer {
+        padding: 2.5rem 0 3.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        font-family: var(--mono);
+        font-size: 0.58rem;
+        letter-spacing: 0.08em;
+        color: var(--text-3);
+      }
+
+      footer a {
+        color: inherit;
+        text-decoration: none;
+        border-bottom: 1px solid var(--border-2);
+        padding-bottom: 1px;
+        transition:
+          color 150ms ease,
+          border-color 150ms ease;
+      }
+
+      footer a:hover {
+        color: var(--gold);
+        border-color: var(--gold-dim);
+      }
+
+      /* ── Animations ── */
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .post-item:nth-child(1) {
+        animation-delay: 0.22s;
+      }
+      .post-item:nth-child(2) {
+        animation-delay: 0.3s;
+      }
+      .post-item:nth-child(3) {
+        animation-delay: 0.38s;
+      }
+      .post-item:nth-child(4) {
+        animation-delay: 0.46s;
+      }
+      .post-item:nth-child(5) {
+        animation-delay: 0.54s;
+      }
+      .post-item:nth-child(6) {
+        animation-delay: 0.62s;
+      }
+
+      /* ── Mobile ── */
+      @media (max-width: 500px) {
+        .page {
+          padding: 0 1.4rem;
+        }
+        .hero {
+          padding: 3.5rem 0 3rem;
+        }
+        .hero::before {
+          left: -1.4rem;
+        }
+        .post-item {
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+        .post-item::before {
+          left: -1.4rem;
+        }
+        .post-date {
+          min-width: unset;
+        }
+        footer {
+          flex-direction: column;
+        }
+      }
+
+      :focus-visible {
+        outline: 1px solid var(--gold);
+        outline-offset: 3px;
+        border-radius: 1px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <nav>
+        <a href="/about">About</a>
+        <a href="/feed.xml">RSS</a>
+      </nav>
+
+      <header class="hero">
+        <h1 class="hero-name">{{ .AuthorName }}</h1>
+        <p class="hero-role">{{ .AuthorRole }}</p>
+        <p class="hero-bio">{{ .AuthorBio }}</p>
+      </header>
+
+      <main>
+        <div class="writing-header">
+          <span class="writing-label">Writing</span>
+          <span class="writing-rule"></span>
+        </div>
+
+        {{ if .Posts }}
+        <ul class="post-list">
+          {{ range .Posts }}
+          <li>
+            <a class="post-item" href="/{{ .Slug }}/">
+              <span class="post-right">
+                <span class="post-title">{{ .Title }}</span>
+                {{ if .Tags }}
+                <span class="post-tags">
+                  {{ range .Tags }}
+                  <span class="pill">{{ . }}</span>
+                  {{ end }}
+                </span>
+                {{ end }}
+              </span>
+              <span class="post-date">{{ .Date }}</span>
+            </a>
+          </li>
+          {{ end }}
+        </ul>
+        {{ else }}
+        <p class="empty">No posts yet.</p>
+        {{ end }}
+      </main>
+
+      <footer>
+        <span>© {{ .Year }} {{ .AuthorName }}</span>
+        <span>Built with <a href="#">kite</a></span>
+      </footer>
+    </div>
+  </body>
+</html>
