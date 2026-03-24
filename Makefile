@@ -9,3 +9,6 @@ build:
 	upx --best --lzma kite-release
 	echo "Successfully built release binary"
 	stat -c %s ./kite-release
+
+serve:
+	go run main.go serve
