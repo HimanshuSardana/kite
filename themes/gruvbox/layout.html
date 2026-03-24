@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ .Title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg0: #1d2021;
+        --bg1: #282828;
+        --bg2: #32302f;
+        --bg3: #3c3836;
+        --fg0: #fbf1c7;
+        --fg1: #ebdbb2;
+        --fg2: #d5c4a1;
+        --fg3: #bdae93;
+        --red: #fb4934;
+        --green: #b8bb26;
+        --yellow: #fabd2f;
+        --blue: #83a598;
+        --purple: #d3869b;
+        --aqua: #8ec07c;
+        --orange: #fe8019;
+        --font-sans: "Inter", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg1);
+        color: var(--fg1);
+        font-family: var(--font-sans);
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .article-container {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 4rem 1.5rem 8rem;
+      }
+
+      .back-nav {
+        margin-bottom: 4rem;
+      }
+
+      .back-nav a {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--fg4);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .back-nav a:hover {
+        color: var(--aqua);
+      }
+
+      h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+        color: var(--fg0);
+        margin: 0 0 2rem;
+      }
+
+      .content {
+        font-size: 1.1rem;
+        color: var(--fg2);
+      }
+
+      .content h2 {
+        color: var(--fg0);
+        margin: 3rem 0 1.2rem;
+        font-size: 1.6rem;
+        letter-spacing: -0.02em;
+      }
+      .content h3 {
+        color: var(--yellow);
+        margin: 2rem 0 1rem;
+        font-size: 1.2rem;
+        font-family: var(--font-mono);
+      }
+
+      .content p {
+        margin-bottom: 1.8rem;
+      }
+
+      .content a {
+        color: var(--aqua);
+        text-decoration: none;
+        border-bottom: 1px solid var(--bg4);
+      }
+      .content a:hover {
+        border-bottom-color: var(--aqua);
+      }
+
+      .content blockquote {
+        margin: 2.5rem 0;
+        padding: 1rem 1.5rem;
+        background: var(--bg2);
+        border-left: 4px solid var(--orange);
+        border-radius: 4px;
+        font-style: italic;
+        color: var(--fg1);
+      }
+
+      .content code:not(pre code) {
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+        background: var(--bg3);
+        color: var(--yellow);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+      }
+
+      pre {
+        background: var(--bg0) !important;
+        padding: 1.5rem !important;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 2rem 0 !important;
+        border: 1px solid var(--bg3);
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg1);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--bg3);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--bg4);
+      }
+
+      .toc {
+        background: var(--bg2);
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 3rem;
+        border: 1px solid var(--bg3);
+      }
+
+      .toc-title {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--orange);
+        margin-bottom: 1rem;
+        display: block;
+      }
+
+      .toc ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .toc li {
+        margin-bottom: 0.5rem;
+      }
+      .toc a {
+        font-size: 0.9rem;
+        color: var(--fg3);
+        text-decoration: none;
+      }
+      .toc a:hover,
+      .toc a.active {
+        color: var(--green);
+      }
+
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 2.2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="article-container">
+      <nav class="back-nav">
+        <a href="/">← index</a>
+      </nav>
+
+      {{ if .TOC }}
+      <nav class="toc">
+        <span class="toc-title">Table of Contents</span>
+        <ul>
+          {{ range .TOC }}
+          <li style="margin-left: calc(({{ .Level }} - 2) * 1rem)">
+            <a href="#{{ .ID }}">{{ .Text }}</a>
+          </li>
+          {{ end }}
+        </ul>
+      </nav>
+      {{ end }}
+
+      <article>
+        <h1>{{ .Title }}</h1>
+        <div class="content">{{ .Content }}</div>
+      </article>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+    <script>
+      // Simple scroll observer for TOC
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const id = entry.target.getAttribute("id");
+            const link = document.querySelector(`.toc a[href="#${id}"]`);
+            if (entry.isIntersecting) {
+              document
+                .querySelectorAll(".toc a")
+                .forEach((a) => a.classList.remove("active"));
+              if (link) link.classList.add("active");
+            }
+          });
+        },
+        { rootMargin: "0px 0px -80% 0px" },
+      );
+
+      document.querySelectorAll("h2, h3").forEach((section) => {
+        observer.observe(section);
+      });
+    </script>
+  </body>
+</html>

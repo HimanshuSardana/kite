@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ .SiteTitle }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        /* Gruvbox Dark Hard Palette */
+        --bg0: #1d2021;
+        --bg1: #282828;
+        --bg2: #32302f;
+        --bg3: #3c3836;
+        --bg4: #504945;
+        --fg0: #fbf1c7;
+        --fg1: #ebdbb2;
+        --fg2: #d5c4a1;
+        --fg3: #bdae93;
+        --fg4: #a89984;
+
+        --red: #fb4934;
+        --green: #b8bb26;
+        --yellow: #fabd2f;
+        --blue: #83a598;
+        --purple: #d3869b;
+        --aqua: #8ec07c;
+        --orange: #fe8019;
+
+        --font-sans: "Inter", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+        --ease: cubic-bezier(0.2, 0, 0, 1);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg1);
+        color: var(--fg1);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      /* Gruvbox Grain */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 10;
+        opacity: 0.4;
+      }
+
+      .page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 3rem 0 0;
+      }
+
+      .logo {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--orange);
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 1.5rem;
+      }
+
+      nav a:not(.logo) {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--fg4);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      nav a:hover {
+        color: var(--aqua);
+      }
+
+      .hero {
+        padding: 6rem 0 4rem;
+      }
+
+      .hero-name {
+        font-size: 3.5rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 0.9;
+        margin: 0 0 1.5rem;
+        color: var(--fg0);
+      }
+
+      .hero-role {
+        font-family: var(--font-mono);
+        background: var(--bg2);
+        color: var(--green);
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        font-size: 0.75rem;
+        border-radius: 4px;
+        margin-bottom: 2rem;
+      }
+
+      .hero-bio {
+        font-size: 1.1rem;
+        color: var(--fg2);
+        max-width: 520px;
+      }
+
+      .section-title {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--fg4);
+        margin: 4rem 0 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .section-title::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--bg3);
+      }
+
+      .post-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .post-item {
+        display: block;
+        padding: 1.5rem;
+        margin: 0 -1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: background 0.2s var(--ease);
+      }
+
+      .post-item:hover {
+        background: var(--bg2);
+      }
+
+      .post-meta {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--fg4);
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+
+      .post-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--blue);
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+
+      .post-tags {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .tag {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        color: var(--purple);
+      }
+
+      footer {
+        padding: 6rem 0 3rem;
+        border-top: 1px solid var(--bg3);
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--fg4);
+      }
+
+      footer a {
+        color: var(--fg2);
+        text-decoration: none;
+      }
+      footer a:hover {
+        color: var(--orange);
+      }
+
+      @media (max-width: 600px) {
+        .hero-name {
+          font-size: 2.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <nav>
+        <a href="/" class="logo">~/{{ .AuthorName }}</a>
+        <div class="nav-links">
+          <a href="/about">About</a>
+          <a href="/feed.xml">RSS</a>
+        </div>
+      </nav>
+
+      <header class="hero">
+        <span class="hero-role">{{ .AuthorRole }}</span>
+        <h1 class="hero-name">{{ .AuthorName }}</h1>
+        <p class="hero-bio">{{ .AuthorBio }}</p>
+      </header>
+
+      <main>
+        <h2 class="section-title">Writing</h2>
+        {{ if .Posts }}
+        <div class="post-list">
+          {{ range .Posts }}
+          <a class="post-item" href="/{{ .Slug }}/">
+            <span class="post-meta">{{ .Date }}</span>
+            <span class="post-title">{{ .Title }}</span>
+            <div class="post-tags">
+              {{ range .Tags }}
+              <span class="tag">#{{ . }}</span>
+              {{ end }}
+            </div>
+          </a>
+          {{ end }}
+        </div>
+        {{ else }}
+        <p
+          style="
+            color: var(--fg4);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+          "
+        >
+          $ No entries found.
+        </p>
+        {{ end }}
+      </main>
+
+      <footer>
+        <span>© {{ .Year }}</span>
+        <span>Built with <a href="#">kite</a></span>
+      </footer>
+    </div>
+  </body>
+</html>
