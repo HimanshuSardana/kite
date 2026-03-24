@@ -7,275 +7,661 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap"
       rel="stylesheet"
     />
     <style>
+      /* ── Gruvbox Hard Dark ── */
       :root {
-        /* Gruvbox Dark Hard Palette */
-        --bg0: #1d2021;
-        --bg1: #282828;
-        --bg2: #32302f;
-        --bg3: #3c3836;
-        --bg4: #504945;
+        --bg0-h: #1d2021;
+        --bg0: #282828;
+        --bg1: #3c3836;
+        --bg2: #504945;
+        --bg3: #665c54;
+        --bg4: #7c6f64;
         --fg0: #fbf1c7;
         --fg1: #ebdbb2;
         --fg2: #d5c4a1;
         --fg3: #bdae93;
         --fg4: #a89984;
+        --red-b: #fb4934;
+        --green-b: #b8bb26;
+        --yellow: #d79921;
+        --yellow-b: #fabd2f;
+        --blue-b: #83a598;
+        --purple-b: #d3869b;
+        --aqua-b: #8ec07c;
+        --orange-b: #fe8019;
 
-        --red: #fb4934;
-        --green: #b8bb26;
-        --yellow: #fabd2f;
-        --blue: #83a598;
-        --purple: #d3869b;
-        --aqua: #8ec07c;
-        --orange: #fe8019;
-
-        --font-sans: "Inter", sans-serif;
-        --font-mono: "JetBrains Mono", monospace;
-        --ease: cubic-bezier(0.2, 0, 0, 1);
+        --mono: "JetBrains Mono", ui-monospace, monospace;
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
       }
 
       *,
       *::before,
       *::after {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
-
       html {
         scroll-behavior: smooth;
       }
 
       body {
-        margin: 0;
-        background: var(--bg1);
+        background: var(--bg0-h);
         color: var(--fg1);
-        font-family: var(--font-sans);
-        -webkit-font-smoothing: antialiased;
+        font-family: var(--mono);
+        font-size: 14px;
         line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
         min-height: 100vh;
       }
 
-      /* Gruvbox Grain */
-      body::before {
+      /* CRT scanlines */
+      body::after {
         content: "";
         position: fixed;
         inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.025) 2px,
+          rgba(0, 0, 0, 0.025) 4px
+        );
         pointer-events: none;
-        z-index: 10;
-        opacity: 0.4;
+        z-index: 9999;
       }
 
-      .page {
-        max-width: 720px;
+      .shell {
+        max-width: 760px;
         margin: 0 auto;
-        padding: 0 1.5rem;
-        position: relative;
-        z-index: 1;
+        padding: 0 1.8rem;
       }
 
-      nav {
+      /* ─────────────────────────────
+         TITLEBAR
+      ───────────────────────────── */
+      .titlebar {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        padding: 3rem 0 0;
+        justify-content: space-between;
+        padding: 1.4rem 0 1.2rem;
+        border-bottom: 1px solid var(--bg2);
+        animation: fadeIn 0.35s ease both;
       }
 
-      .logo {
-        font-family: var(--font-mono);
-        font-weight: 700;
-        color: var(--orange);
-        text-decoration: none;
-        font-size: 0.9rem;
-      }
-
-      .nav-links {
+      .titlebar-id {
         display: flex;
-        gap: 1.5rem;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.65rem;
+        color: var(--bg4);
+        letter-spacing: 0.05em;
       }
 
-      nav a:not(.logo) {
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
+      .wm-dots {
+        display: flex;
+        gap: 5px;
+      }
+      .wm-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        cursor: default;
+      }
+      .wm-dot.r {
+        background: #fb4934;
+        box-shadow: 0 0 6px rgba(251, 73, 52, 0.4);
+      }
+      .wm-dot.y {
+        background: #fabd2f;
+        box-shadow: 0 0 6px rgba(250, 189, 47, 0.4);
+      }
+      .wm-dot.g {
+        background: #b8bb26;
+        box-shadow: 0 0 6px rgba(184, 187, 38, 0.4);
+      }
+
+      .titlebar-nav {
+        display: flex;
+        gap: 1.8rem;
+      }
+
+      .titlebar-nav a {
+        font-size: 0.65rem;
         color: var(--fg4);
         text-decoration: none;
-        transition: color 0.2s ease;
+        letter-spacing: 0.06em;
+        transition: color 130ms ease;
       }
 
-      nav a:hover {
-        color: var(--aqua);
+      .titlebar-nav a:hover {
+        color: var(--yellow-b);
       }
 
+      /* ─────────────────────────────
+         HERO
+      ───────────────────────────── */
       .hero {
-        padding: 6rem 0 4rem;
+        padding: 4.5rem 0 3.5rem;
+        position: relative;
+        border-bottom: 1px solid var(--bg1);
+      }
+
+      /* animated left bar */
+      .hero::before {
+        content: "";
+        position: absolute;
+        left: -1.8rem;
+        top: 0;
+        height: 100%;
+        width: 3px;
+        background: linear-gradient(
+          180deg,
+          var(--yellow-b) 0%,
+          var(--orange-b) 55%,
+          transparent 100%
+        );
+        opacity: 0.75;
+        animation: fadeIn 1s ease 0.3s both;
+      }
+
+      .prompt-line {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.67rem;
+        color: var(--green-b);
+        letter-spacing: 0.06em;
+        margin-bottom: 1.1rem;
+        animation: fadeUp 0.5s var(--ease) 0.05s both;
+      }
+
+      .prompt-line .ps1-user {
+        color: var(--green-b);
+      }
+      .prompt-line .ps1-at {
+        color: var(--fg4);
+      }
+      .prompt-line .ps1-host {
+        color: var(--blue-b);
+      }
+      .prompt-line .ps1-sep {
+        color: var(--fg4);
+      }
+      .prompt-line .ps1-path {
+        color: var(--yellow-b);
+      }
+      .prompt-line .ps1-sym {
+        color: var(--fg4);
+      }
+
+      .cursor {
+        display: inline-block;
+        width: 9px;
+        height: 1.1em;
+        background: var(--yellow-b);
+        vertical-align: text-bottom;
+        animation: blink 1.1s step-end infinite;
+        margin-left: 2px;
+        opacity: 0.9;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 0.9;
+        }
+        50% {
+          opacity: 0;
+        }
       }
 
       .hero-name {
-        font-size: 3.5rem;
-        font-weight: 800;
+        font-size: clamp(2.4rem, 8vw, 4.2rem);
+        font-weight: 400;
+        line-height: 1;
         letter-spacing: -0.03em;
-        line-height: 0.9;
-        margin: 0 0 1.5rem;
         color: var(--fg0);
+        margin-bottom: 1rem;
+        animation: fadeUp 0.6s var(--ease) 0.1s both;
       }
 
-      .hero-role {
-        font-family: var(--font-mono);
-        background: var(--bg2);
-        color: var(--green);
-        display: inline-block;
-        padding: 0.2rem 0.6rem;
-        font-size: 0.75rem;
-        border-radius: 4px;
-        margin-bottom: 2rem;
+      .hero-name .hl-y {
+        color: var(--yellow-b);
+      }
+      .hero-name .hl-o {
+        color: var(--orange-b);
+      }
+
+      .hero-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.4rem 0.6rem;
+        margin-bottom: 1.8rem;
+        animation: fadeUp 0.6s var(--ease) 0.17s both;
+      }
+
+      .badge {
+        font-size: 0.6rem;
+        letter-spacing: 0.09em;
+        padding: 0.18rem 0.55rem;
+        border-radius: 2px;
+        border: 1px solid;
+      }
+      .badge-y {
+        color: var(--yellow-b);
+        border-color: var(--yellow);
+        background: rgba(215, 153, 33, 0.1);
+      }
+      .badge-a {
+        color: var(--aqua-b);
+        border-color: #689d6a;
+        background: rgba(104, 157, 106, 0.1);
+      }
+      .badge-p {
+        color: var(--purple-b);
+        border-color: #b16286;
+        background: rgba(177, 98, 134, 0.1);
       }
 
       .hero-bio {
-        font-size: 1.1rem;
-        color: var(--fg2);
-        max-width: 520px;
+        font-size: 0.8rem;
+        font-weight: 300;
+        font-style: italic;
+        line-height: 1.8;
+        color: var(--fg3);
+        max-width: 500px;
+        padding-left: 1rem;
+        border-left: 2px solid var(--bg2);
+        animation: fadeUp 0.6s var(--ease) 0.24s both;
       }
 
-      .section-title {
-        font-family: var(--font-mono);
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.2em;
-        color: var(--fg4);
-        margin: 4rem 0 2rem;
+      /* ─────────────────────────────
+         POSTS SECTION
+      ───────────────────────────── */
+      .posts-section {
+        padding: 2.8rem 0 0;
+      }
+
+      /* file-tab header */
+      .file-header {
+        display: flex;
+        align-items: stretch;
+        border: 1px solid var(--bg2);
+        border-bottom: none;
+        border-radius: 4px 4px 0 0;
+        overflow: hidden;
+        font-size: 0.62rem;
+        letter-spacing: 0.07em;
+      }
+
+      .file-tab {
+        padding: 0.45rem 1.1rem;
+        background: var(--yellow);
+        color: var(--bg0-h);
+        font-weight: 500;
+        white-space: nowrap;
+      }
+
+      .file-path {
+        flex: 1;
+        padding: 0.45rem 0.9rem;
+        background: var(--bg1);
+        color: var(--bg4);
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.4rem;
       }
 
-      .section-title::after {
-        content: "";
-        flex: 1;
-        height: 1px;
-        background: var(--bg3);
+      .file-count {
+        margin-left: auto;
+        color: var(--bg3);
+        font-size: 0.57rem;
       }
 
+      /* post table */
       .post-list {
         list-style: none;
-        padding: 0;
-        margin: 0;
+        border: 1px solid var(--bg2);
+        border-radius: 0 0 4px 4px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+      }
+
+      .post-list li {
+        display: block;
       }
 
       .post-item {
-        display: block;
-        padding: 1.5rem;
-        margin: 0 -1.5rem;
-        border-radius: 8px;
+        display: grid;
+        grid-template-columns: 5ch 1fr auto;
+        align-items: start;
+        gap: 0 1.2rem;
+        padding: 0.9rem 1rem 0.9rem 0.8rem;
         text-decoration: none;
-        transition: background 0.2s var(--ease);
+        color: inherit;
+        border-bottom: 1px solid var(--bg1);
+        transition: background 130ms ease;
+        animation: fadeUp 0.5s var(--ease) both;
+        position: relative;
+      }
+
+      .post-list li:last-child .post-item {
+        border-bottom: none;
       }
 
       .post-item:hover {
-        background: var(--bg2);
+        background: var(--bg1);
+      }
+      .post-item:hover .post-title {
+        color: var(--yellow-b);
+      }
+      .post-item:hover .post-date {
+        color: var(--fg4);
+      }
+      .post-item:hover .post-lnum {
+        color: var(--fg4);
       }
 
-      .post-meta {
-        font-family: var(--font-mono);
-        font-size: 0.7rem;
-        color: var(--fg4);
-        margin-bottom: 0.5rem;
-        display: block;
+      /* gutter arrow on hover */
+      .post-item::before {
+        content: "▶";
+        position: absolute;
+        left: -0.1rem;
+        top: 50%;
+        transform: translateY(-50%) scale(0);
+        font-size: 0.4rem;
+        color: var(--yellow-b);
+        transition: transform 160ms var(--ease);
+      }
+      .post-item:hover::before {
+        transform: translateY(-50%) scale(1);
+      }
+
+      .post-lnum {
+        font-size: 0.6rem;
+        color: var(--bg3);
+        padding-top: 0.15em;
+        user-select: none;
+        letter-spacing: 0.04em;
+        text-align: right;
+        transition: color 130ms ease;
+      }
+
+      .post-body {
+        min-width: 0;
       }
 
       .post-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--blue);
-        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 400;
+        color: var(--fg1);
+        line-height: 1.4;
+        letter-spacing: 0.01em;
         display: block;
+        transition: color 130ms ease;
       }
 
       .post-tags {
         display: flex;
-        gap: 0.5rem;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        margin-top: 0.35rem;
       }
 
-      .tag {
-        font-family: var(--font-mono);
-        font-size: 0.65rem;
-        color: var(--purple);
+      .pill {
+        font-size: 0.55rem;
+        letter-spacing: 0.08em;
+        padding: 0.1rem 0.4rem;
+        border-radius: 2px;
+        border: 1px solid transparent;
+      }
+      .pill:nth-child(4n + 1) {
+        color: var(--aqua-b);
+        border-color: #689d6a;
+        background: rgba(104, 157, 106, 0.08);
+      }
+      .pill:nth-child(4n + 2) {
+        color: var(--purple-b);
+        border-color: #b16286;
+        background: rgba(177, 98, 134, 0.08);
+      }
+      .pill:nth-child(4n + 3) {
+        color: var(--blue-b);
+        border-color: #458588;
+        background: rgba(69, 133, 136, 0.08);
+      }
+      .pill:nth-child(4n + 4) {
+        color: var(--orange-b);
+        border-color: #d65d0e;
+        background: rgba(214, 93, 14, 0.08);
       }
 
+      .post-date {
+        font-size: 0.6rem;
+        color: var(--bg4);
+        white-space: nowrap;
+        letter-spacing: 0.04em;
+        padding-top: 0.15em;
+        transition: color 130ms ease;
+      }
+
+      /* empty */
+      .no-posts {
+        border: 1px solid var(--bg2);
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+        padding: 3rem 1rem;
+        text-align: center;
+        font-size: 0.68rem;
+        color: var(--bg3);
+        letter-spacing: 0.07em;
+      }
+
+      /* ─────────────────────────────
+         FOOTER
+      ───────────────────────────── */
       footer {
-        padding: 6rem 0 3rem;
-        border-top: 1px solid var(--bg3);
+        padding: 1.2rem 0 2.5rem;
+        border-top: 1px solid var(--bg1);
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        font-family: var(--font-mono);
-        font-size: 0.7rem;
-        color: var(--fg4);
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        font-size: 0.6rem;
+        color: var(--bg4);
+        letter-spacing: 0.06em;
       }
 
       footer a {
-        color: var(--fg2);
+        color: var(--blue-b);
         text-decoration: none;
+        transition: color 130ms ease;
       }
       footer a:hover {
-        color: var(--orange);
+        color: var(--yellow-b);
       }
 
-      @media (max-width: 600px) {
-        .hero-name {
-          font-size: 2.5rem;
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .status-led {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--green-b);
+        animation: glow 2.4s ease infinite;
+      }
+      @keyframes glow {
+        0%,
+        100% {
+          opacity: 1;
+          box-shadow: 0 0 4px var(--green-b);
         }
+        50% {
+          opacity: 0.3;
+          box-shadow: none;
+        }
+      }
+
+      /* ─────────────────────────────
+         ANIMATIONS
+      ───────────────────────────── */
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .post-item:nth-child(1) {
+        animation-delay: 0.18s;
+      }
+      .post-item:nth-child(2) {
+        animation-delay: 0.24s;
+      }
+      .post-item:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .post-item:nth-child(4) {
+        animation-delay: 0.36s;
+      }
+      .post-item:nth-child(5) {
+        animation-delay: 0.42s;
+      }
+      .post-item:nth-child(6) {
+        animation-delay: 0.48s;
+      }
+
+      /* ─────────────────────────────
+         MOBILE
+      ───────────────────────────── */
+      @media (max-width: 520px) {
+        .shell {
+          padding: 0 1rem;
+        }
+        .hero::before {
+          left: -1rem;
+        }
+        .post-item {
+          grid-template-columns: 1fr;
+          gap: 0.2rem;
+        }
+        .post-lnum {
+          display: none;
+        }
+        .post-date {
+          text-align: left;
+        }
+        footer {
+          flex-direction: column;
+        }
+      }
+
+      :focus-visible {
+        outline: 1px solid var(--yellow-b);
+        outline-offset: 3px;
+        border-radius: 1px;
       }
     </style>
   </head>
   <body>
-    <div class="page">
-      <nav>
-        <a href="/" class="logo">~/{{ .AuthorName }}</a>
-        <div class="nav-links">
-          <a href="/about">About</a>
-          <a href="/feed.xml">RSS</a>
+    <div class="shell">
+      <!-- window chrome -->
+      <div class="titlebar">
+        <div class="titlebar-id">
+          <div class="wm-dots">
+            <span class="wm-dot r"></span>
+            <span class="wm-dot y"></span>
+            <span class="wm-dot g"></span>
+          </div>
+          <span>{{ .SiteTitle }}</span>
         </div>
-      </nav>
+        <nav class="titlebar-nav">
+          <a href="/about">about</a>
+          <a href="/feed.xml">rss</a>
+        </nav>
+      </div>
 
+      <!-- hero -->
       <header class="hero">
-        <span class="hero-role">{{ .AuthorRole }}</span>
+        <div class="prompt-line">
+          <span class="ps1-user">visitor</span>
+          <span class="ps1-at">@</span>
+          <span class="ps1-host">{{ .SiteTitle }}</span>
+          <span class="ps1-sep">:</span>
+          <span class="ps1-path">~</span>
+          <span class="ps1-sym">$</span>
+          <span class="cursor"></span>
+        </div>
         <h1 class="hero-name">{{ .AuthorName }}</h1>
+        <div class="hero-meta">
+          <span class="badge badge-y">{{ .AuthorRole }}</span>
+        </div>
         <p class="hero-bio">{{ .AuthorBio }}</p>
       </header>
 
-      <main>
-        <h2 class="section-title">Writing</h2>
-        {{ if .Posts }}
-        <div class="post-list">
-          {{ range .Posts }}
-          <a class="post-item" href="/{{ .Slug }}/">
-            <span class="post-meta">{{ .Date }}</span>
-            <span class="post-title">{{ .Title }}</span>
-            <div class="post-tags">
-              {{ range .Tags }}
-              <span class="tag">#{{ . }}</span>
-              {{ end }}
-            </div>
-          </a>
-          {{ end }}
+      <!-- writing -->
+      <section class="posts-section">
+        <div class="file-header">
+          <span class="file-tab">writing</span>
+          <span class="file-path">
+            <span>~/posts/</span>
+            <span class="file-count"
+              >{{ if .Posts }}{{ len .Posts }} files{{ else }}empty{{ end
+              }}</span
+            >
+          </span>
         </div>
+
+        {{ if .Posts }}
+        <ul class="post-list">
+          {{ range $i, $p := .Posts }}
+          <li>
+            <a class="post-item" href="/{{ $p.Slug }}/">
+              <span class="post-lnum">{{ printf "%d" }}</span>
+              <span class="post-body">
+                <span class="post-title">{{ $p.Title }}</span>
+                {{ if $p.Tags }}
+                <span class="post-tags">
+                  {{ range $p.Tags }}<span class="pill">{{ . }}</span>{{ end }}
+                </span>
+                {{ end }}
+              </span>
+              <span class="post-date">{{ $p.Date }}</span>
+            </a>
+          </li>
+          {{ end }}
+        </ul>
         {{ else }}
-        <p
-          style="
-            color: var(--fg4);
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-          "
-        >
-          $ No entries found.
-        </p>
+        <div class="no-posts">-- no posts yet --</div>
         {{ end }}
-      </main>
+      </section>
 
       <footer>
-        <span>© {{ .Year }}</span>
-        <span>Built with <a href="#">kite</a></span>
+        <span>© {{ .Year }} {{ .AuthorName }}</span>
+        <div class="status">
+          <span class="status-led"></span>
+          <span>built with <a href="#">kite</a></span>
+        </div>
       </footer>
     </div>
   </body>

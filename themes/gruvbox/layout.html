@@ -3,244 +3,750 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="{{ .Title }}" />
     <title>{{ .Title }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap"
       rel="stylesheet"
     />
+    <!-- Prism gruvbox-ish: okaidia is closest warm dark -->
     <link
-      href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.css"
+      href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-okaidia.css"
       rel="stylesheet"
     />
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/plugins/autoloader/prism-autoloader.min.js"></script>
     <style>
       :root {
-        --bg0: #1d2021;
-        --bg1: #282828;
-        --bg2: #32302f;
-        --bg3: #3c3836;
+        --bg0-h: #1d2021;
+        --bg0: #282828;
+        --bg1: #3c3836;
+        --bg2: #504945;
+        --bg3: #665c54;
+        --bg4: #7c6f64;
         --fg0: #fbf1c7;
         --fg1: #ebdbb2;
         --fg2: #d5c4a1;
         --fg3: #bdae93;
-        --red: #fb4934;
-        --green: #b8bb26;
-        --yellow: #fabd2f;
-        --blue: #83a598;
-        --purple: #d3869b;
-        --aqua: #8ec07c;
-        --orange: #fe8019;
-        --font-sans: "Inter", sans-serif;
-        --font-mono: "JetBrains Mono", monospace;
+        --fg4: #a89984;
+        --red-b: #fb4934;
+        --green-b: #b8bb26;
+        --yellow: #d79921;
+        --yellow-b: #fabd2f;
+        --blue-b: #83a598;
+        --purple-b: #d3869b;
+        --aqua-b: #8ec07c;
+        --orange-b: #fe8019;
+
+        --mono: "JetBrains Mono", ui-monospace, monospace;
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+        /* article max width */
+        --article-w: 680px;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
       }
 
       body {
-        margin: 0;
-        background: var(--bg1);
+        background: var(--bg0-h);
         color: var(--fg1);
-        font-family: var(--font-sans);
-        line-height: 1.7;
+        font-family: var(--mono);
+        font-size: 14px;
+        line-height: 1.6;
         -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
       }
 
-      .article-container {
-        max-width: 720px;
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.025) 2px,
+          rgba(0, 0, 0, 0.025) 4px
+        );
+        pointer-events: none;
+        z-index: 9999;
+      }
+
+      /* ─────────────────────────────
+         LAYOUT — article + fixed TOC
+      ───────────────────────────── */
+      .page-wrap {
+        max-width: var(--article-w);
         margin: 0 auto;
-        padding: 4rem 1.5rem 8rem;
+        padding: 0 1.8rem;
       }
 
-      .back-nav {
-        margin-bottom: 4rem;
-      }
-
-      .back-nav a {
-        font-family: var(--font-mono);
-        font-size: 0.8rem;
-        color: var(--fg4);
-        text-decoration: none;
+      /* ─────────────────────────────
+         TOPBAR
+      ───────────────────────────── */
+      .topbar {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        justify-content: space-between;
+        padding: 1.4rem 0 1.2rem;
+        border-bottom: 1px solid var(--bg2);
       }
 
-      .back-nav a:hover {
-        color: var(--aqua);
-      }
-
-      h1 {
-        font-size: 3rem;
-        font-weight: 800;
-        letter-spacing: -0.04em;
-        line-height: 1.1;
-        color: var(--fg0);
-        margin: 0 0 2rem;
-      }
-
-      .content {
-        font-size: 1.1rem;
-        color: var(--fg2);
-      }
-
-      .content h2 {
-        color: var(--fg0);
-        margin: 3rem 0 1.2rem;
-        font-size: 1.6rem;
-        letter-spacing: -0.02em;
-      }
-      .content h3 {
-        color: var(--yellow);
-        margin: 2rem 0 1rem;
-        font-size: 1.2rem;
-        font-family: var(--font-mono);
-      }
-
-      .content p {
-        margin-bottom: 1.8rem;
-      }
-
-      .content a {
-        color: var(--aqua);
+      .topbar-back {
+        font-size: 0.65rem;
+        color: var(--fg4);
         text-decoration: none;
-        border-bottom: 1px solid var(--bg4);
-      }
-      .content a:hover {
-        border-bottom-color: var(--aqua);
+        letter-spacing: 0.05em;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: color 130ms ease;
       }
 
-      .content blockquote {
+      .topbar-back:hover {
+        color: var(--yellow-b);
+      }
+
+      .topbar-back::before {
+        content: "←";
+        font-size: 0.8em;
+      }
+
+      .topbar-title {
+        font-size: 0.6rem;
+        color: var(--bg4);
+        letter-spacing: 0.07em;
+        max-width: 40ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* ─────────────────────────────
+         ARTICLE HEADING BLOCK
+      ───────────────────────────── */
+      .article-header {
+        padding: 3.5rem 0 2.5rem;
+        border-bottom: 1px solid var(--bg1);
+        position: relative;
+        animation: fadeUp 0.6s var(--ease) both;
+      }
+
+      .article-header::before {
+        content: "";
+        position: absolute;
+        left: -1.8rem;
+        top: 0;
+        height: 100%;
+        width: 3px;
+        background: linear-gradient(
+          180deg,
+          var(--orange-b) 0%,
+          var(--yellow-b) 60%,
+          transparent 100%
+        );
+        opacity: 0.7;
+      }
+
+      .article-eyebrow {
+        font-size: 0.6rem;
+        color: var(--aqua-b);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      .article-eyebrow::before {
+        content: "#";
+        color: var(--orange-b);
+        font-size: 0.8em;
+      }
+
+      .article-h1 {
+        font-size: clamp(1.6rem, 5vw, 2.4rem);
+        font-weight: 400;
+        color: var(--fg0);
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        margin-bottom: 1.2rem;
+      }
+
+      /* ─────────────────────────────
+         TOC
+      ───────────────────────────── */
+      .toc-wrap {
         margin: 2.5rem 0;
-        padding: 1rem 1.5rem;
-        background: var(--bg2);
-        border-left: 4px solid var(--orange);
-        border-radius: 4px;
-        font-style: italic;
-        color: var(--fg1);
-      }
-
-      .content code:not(pre code) {
-        font-family: var(--font-mono);
-        font-size: 0.9em;
-        background: var(--bg3);
-        color: var(--yellow);
-        padding: 0.2rem 0.4rem;
-        border-radius: 4px;
-      }
-
-      pre {
-        background: var(--bg0) !important;
-        padding: 1.5rem !important;
-        border-radius: 8px;
-        overflow-x: auto;
-        margin: 2rem 0 !important;
-        border: 1px solid var(--bg3);
-      }
-
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: var(--bg1);
-      }
-      ::-webkit-scrollbar-thumb {
-        background: var(--bg3);
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: var(--bg4);
       }
 
       .toc {
-        background: var(--bg2);
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin-bottom: 3rem;
-        border: 1px solid var(--bg3);
+        background: var(--bg0) !important;
+        border: 1px solid var(--bg2) !important;
+        border-left: 3px solid var(--yellow) !important;
+        border-radius: 3px;
+        padding: 1rem 1.2rem !important;
+        margin: 0 !important;
+        width: auto !important;
+        position: static !important;
+        right: auto !important;
+        top: auto !important;
       }
 
       .toc-title {
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
+        font-size: 0.58rem !important;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--orange);
-        margin-bottom: 1rem;
+        color: var(--yellow) !important;
+        margin: 0 0 0.8rem !important;
         display: block;
+        line-height: 1 !important;
       }
 
       .toc ul {
         list-style: none;
         padding: 0;
         margin: 0;
-      }
-      .toc li {
-        margin-bottom: 0.5rem;
-      }
-      .toc a {
-        font-size: 0.9rem;
-        color: var(--fg3);
-        text-decoration: none;
-      }
-      .toc a:hover,
-      .toc a.active {
-        color: var(--green);
+        display: block;
       }
 
-      @media (max-width: 600px) {
-        h1 {
-          font-size: 2.2rem;
+      .toc li {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0.2rem 0 !important;
+      }
+
+      .toc li::before {
+        display: none !important;
+      }
+
+      .toc a {
+        font-size: 0.7rem;
+        color: var(--fg4);
+        text-decoration: none;
+        letter-spacing: 0.02em;
+        transition: color 130ms ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .toc a::before {
+        content: "›";
+        color: var(--bg3);
+        font-size: 0.9em;
+        transition: color 130ms ease;
+      }
+
+      .toc a:hover {
+        color: var(--yellow-b);
+      }
+      .toc a:hover::before {
+        color: var(--yellow-b);
+      }
+
+      .toc a.active {
+        color: var(--yellow-b);
+        font-weight: 500;
+      }
+      .toc a.active::before {
+        color: var(--orange-b);
+      }
+
+      .toc-toggle {
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0 0 0.8rem;
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--fg4);
+        width: 100%;
+        text-align: left;
+        transition: color 130ms ease;
+      }
+
+      .toc-toggle svg {
+        transition: transform 160ms ease;
+        flex-shrink: 0;
+      }
+
+      .toc-toggle[aria-expanded="false"] svg {
+        transform: rotate(-90deg);
+      }
+
+      .toc-body {
+        overflow: hidden;
+        transition:
+          max-height 260ms ease,
+          opacity 220ms ease;
+        max-height: 800px;
+        opacity: 1;
+      }
+
+      .toc-body.collapsed {
+        max-height: 0;
+        opacity: 0;
+      }
+
+      .toc-level-2 {
+        padding-left: 0.9rem !important;
+      }
+      .toc-level-3 {
+        padding-left: 1.7rem !important;
+      }
+      .toc-level-4 {
+        padding-left: 2.4rem !important;
+      }
+
+      @media (max-width: 699px) {
+        .toc-toggle {
+          display: flex;
         }
+        .toc-title {
+          display: none !important;
+        }
+      }
+
+      @media (min-width: 700px) {
+        .toc-toggle {
+          display: none;
+        }
+        .toc-title {
+          display: block !important;
+        }
+        .toc-body {
+          max-height: none !important;
+          opacity: 1 !important;
+        }
+      }
+
+      @media (min-width: 1160px) {
+        .toc-wrap {
+          display: none;
+        } /* hide inline toc, show fixed */
+
+        .toc-fixed {
+          display: block !important;
+          position: fixed;
+          top: 5rem;
+          left: max(1.5rem, calc((100vw - var(--article-w)) / 2 - 210px));
+          width: 190px;
+          background: transparent;
+          border: none !important;
+          border-left: 1px solid var(--bg2) !important;
+          border-radius: 0;
+          padding: 0 0 0 1.1rem !important;
+        }
+
+        .toc-fixed .toc-toggle {
+          display: none;
+        }
+        .toc-fixed .toc-title {
+          display: block !important;
+        }
+        .toc-fixed .toc-body {
+          max-height: none !important;
+          opacity: 1 !important;
+        }
+        .toc-fixed .toc-level-2 {
+          padding-left: 0.8rem !important;
+        }
+        .toc-fixed .toc-level-3 {
+          padding-left: 1.4rem !important;
+        }
+      }
+
+      .toc-fixed {
+        display: none;
+      }
+
+      /* ─────────────────────────────
+         PROSE
+      ───────────────────────────── */
+      .prose {
+        padding: 2.5rem 0 5rem;
+        animation: fadeUp 0.6s var(--ease) 0.1s both;
+      }
+
+      .prose > * + * {
+        margin-top: 1.4rem;
+      }
+
+      .prose p {
+        font-size: 0.88rem;
+        font-weight: 300;
+        line-height: 1.85;
+        color: var(--fg2);
+        letter-spacing: 0.01em;
+      }
+
+      .prose h2 {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--yellow-b);
+        letter-spacing: -0.01em;
+        margin-top: 3rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--bg2);
+        scroll-margin-top: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .prose h2::before {
+        content: "##";
+        font-size: 0.6em;
+        color: var(--orange-b);
+        opacity: 0.7;
+        font-weight: 400;
+      }
+
+      .prose h3 {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--aqua-b);
+        letter-spacing: 0.02em;
+        margin-top: 2.2rem;
+        scroll-margin-top: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .prose h3::before {
+        content: "###";
+        font-size: 0.65em;
+        color: var(--bg3);
+        font-weight: 400;
+      }
+
+      .prose h4 {
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--purple-b);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-top: 1.8rem;
+        scroll-margin-top: 1.5rem;
+      }
+
+      .prose a {
+        color: var(--blue-b);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(131, 165, 152, 0.4);
+        padding-bottom: 1px;
+        transition:
+          color 130ms ease,
+          border-color 130ms ease;
+      }
+
+      .prose a:hover {
+        color: var(--yellow-b);
+        border-color: rgba(250, 189, 47, 0.5);
+      }
+
+      .prose strong {
+        color: var(--fg0);
+        font-weight: 500;
+      }
+
+      .prose em {
+        color: var(--fg2);
+        font-style: italic;
+      }
+
+      .prose blockquote {
+        margin: 2rem 0;
+        padding: 1rem 1.4rem;
+        background: var(--bg0);
+        border: 1px solid var(--bg2);
+        border-left: 3px solid var(--orange-b);
+        border-radius: 0 3px 3px 0;
+        color: var(--fg3);
+        font-style: italic;
+        font-size: 0.85rem;
+        font-weight: 300;
+      }
+
+      .prose blockquote p {
+        color: var(--fg3);
+        font-size: inherit;
+      }
+
+      .prose code {
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        color: var(--orange-b);
+        background: var(--bg1);
+        border: 1px solid var(--bg2);
+        padding: 0.12em 0.4em;
+        border-radius: 2px;
+      }
+
+      .prose pre {
+        background: var(--bg0) !important;
+        border: 1px solid var(--bg2) !important;
+        border-radius: 4px;
+        padding: 1.4rem 1.5rem !important;
+        overflow-x: auto;
+        position: relative;
+      }
+
+      /* file type label on code blocks */
+      .prose pre[class*="language-"]::before {
+        content: attr(data-lang);
+        position: absolute;
+        top: 0.5rem;
+        right: 0.8rem;
+        font-size: 0.55rem;
+        color: var(--bg4);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .prose pre code {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        font-size: 0.78rem;
+        letter-spacing: 0.02em;
+        color: var(--fg1);
+      }
+
+      .prose hr {
+        border: none;
+        border-top: 1px solid var(--bg2);
+        margin: 3rem 0;
+        position: relative;
+      }
+
+      .prose hr::after {
+        content: "◆ ◆ ◆";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.4rem;
+        color: var(--bg3);
+        background: var(--bg0-h);
+        padding: 0 0.8rem;
+        letter-spacing: 0.3em;
+      }
+
+      .prose ul,
+      .prose ol {
+        padding-left: 1.6rem;
+        font-size: 0.88rem;
+        font-weight: 300;
+        color: var(--fg2);
+        line-height: 1.8;
+      }
+
+      .prose li {
+        margin-bottom: 0.3rem;
+      }
+
+      .prose li::marker {
+        color: var(--yellow);
+        font-size: 0.75em;
+      }
+
+      .prose table {
+        width: 100%;
+        font-size: 0.78rem;
+        border-collapse: collapse;
+        color: var(--fg2);
+      }
+
+      .prose th {
+        text-align: left;
+        font-weight: 500;
+        color: var(--yellow-b);
+        border-bottom: 1px solid var(--bg2);
+        padding: 0.5rem 0.8rem;
+        background: var(--bg1);
+        letter-spacing: 0.04em;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+      }
+
+      .prose td {
+        padding: 0.5rem 0.8rem;
+        border-bottom: 1px solid var(--bg1);
+      }
+
+      .prose tr:hover td {
+        background: var(--bg0);
+      }
+
+      /* ─────────────────────────────
+         ANIMATIONS
+      ───────────────────────────── */
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ─────────────────────────────
+         MOBILE
+      ───────────────────────────── */
+      @media (max-width: 520px) {
+        .page-wrap {
+          padding: 0 1rem;
+        }
+        .article-header::before {
+          left: -1rem;
+        }
+      }
+
+      :focus-visible {
+        outline: 1px solid var(--yellow-b);
+        outline-offset: 3px;
+        border-radius: 1px;
       }
     </style>
   </head>
   <body>
-    <main class="article-container">
-      <nav class="back-nav">
-        <a href="/">← index</a>
-      </nav>
-
-      {{ if .TOC }}
-      <nav class="toc">
-        <span class="toc-title">Table of Contents</span>
+    <!-- Fixed sidebar TOC (wide screens) -->
+    <nav class="toc toc-fixed" aria-label="Table of contents">
+      <span class="toc-title">Contents</span>
+      <div class="toc-body" id="toc-body-fixed">
         <ul>
           {{ range .TOC }}
-          <li style="margin-left: calc(({{ .Level }} - 2) * 1rem)">
+          <li class="toc-level-{{ .Level }}">
             <a href="#{{ .ID }}">{{ .Text }}</a>
           </li>
           {{ end }}
         </ul>
-      </nav>
-      {{ end }}
+      </div>
+    </nav>
 
-      <article>
-        <h1>{{ .Title }}</h1>
-        <div class="content">{{ .Content }}</div>
-      </article>
-    </main>
+    <div class="page-wrap">
+      <!-- top navigation -->
+      <div class="topbar">
+        <a class="topbar-back" href="/">home</a>
+        <span class="topbar-title">{{ .Title }}</span>
+      </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+      <!-- article title block -->
+      <header class="article-header">
+        <div class="article-eyebrow">post</div>
+        <h1 class="article-h1">{{ .Title }}</h1>
+      </header>
+
+      <!-- inline TOC (small/medium screens) -->
+      <div class="toc-wrap">
+        <nav class="toc" aria-label="Table of contents">
+          <button
+            class="toc-toggle"
+            aria-expanded="false"
+            aria-controls="toc-body"
+          >
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 10 10"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M2 3.5L5 6.5L8 3.5"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Contents
+          </button>
+          <span class="toc-title">Contents</span>
+          <div class="toc-body collapsed" id="toc-body">
+            <ul>
+              {{ range .TOC }}
+              <li class="toc-level-{{ .Level }}">
+                <a href="#{{ .ID }}">{{ .Text }}</a>
+              </li>
+              {{ end }}
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+      <!-- body -->
+      <article class="prose">{{ .Content }}</article>
+    </div>
+
     <script>
-      // Simple scroll observer for TOC
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            const id = entry.target.getAttribute("id");
-            const link = document.querySelector(`.toc a[href="#${id}"]`);
-            if (entry.isIntersecting) {
-              document
-                .querySelectorAll(".toc a")
-                .forEach((a) => a.classList.remove("active"));
-              if (link) link.classList.add("active");
-            }
-          });
-        },
-        { rootMargin: "0px 0px -80% 0px" },
-      );
+      // ── Toggle (mobile) ──
+      const toggle = document.querySelector(".toc-wrap .toc-toggle");
+      const body = document.getElementById("toc-body");
 
-      document.querySelectorAll("h2, h3").forEach((section) => {
-        observer.observe(section);
-      });
+      if (toggle && body) {
+        toggle.addEventListener("click", () => {
+          const expanded = toggle.getAttribute("aria-expanded") === "true";
+          toggle.setAttribute("aria-expanded", String(!expanded));
+          body.classList.toggle("collapsed", expanded);
+        });
+      }
+
+      // ── Active TOC link observer ──
+      function initTocObserver(tocSelector, bodyId) {
+        const links = document.querySelectorAll(tocSelector + " a");
+        if (!links.length) return;
+
+        const ids = Array.from(links).map((a) =>
+          decodeURIComponent(a.getAttribute("href").slice(1)),
+        );
+        const headings = ids
+          .map((id) => document.getElementById(id))
+          .filter(Boolean);
+        let current = null;
+
+        const obs = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) current = e.target.id;
+            });
+            links.forEach((a) => {
+              a.classList.toggle(
+                "active",
+                decodeURIComponent(a.getAttribute("href").slice(1)) === current,
+              );
+            });
+          },
+          { rootMargin: "0px 0px -65% 0px", threshold: 0 },
+        );
+
+        headings.forEach((h) => obs.observe(h));
+      }
+
+      initTocObserver(".toc-wrap .toc", "toc-body");
+      initTocObserver(".toc-fixed", "toc-body-fixed");
     </script>
   </body>
 </html>

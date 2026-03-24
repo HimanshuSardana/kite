@@ -44,19 +44,19 @@ type Frontmatter struct {
 	Tags  []string `yaml:"tags"`
 }
 
+var themeName = "gruvbox"
+
 func main() {
 	contentDir := "./content"
 	outputDir := "./output"
 
 	posts := make([]Post, 0)
 
-	themeName := "modern-light"
-
 	args := os.Args
 	if len(args) > 1 {
 		switch args[1] {
 		case "serve":
-			copyFile("./themes/"+themeName+".css", "./output/style.css")
+			copyFile("./themes/"+themeName+"/style.css", "./output/style.css")
 
 			fs := http.FileServer(http.Dir("./output/"))
 			http.Handle("/", fs)
@@ -101,7 +101,7 @@ func main() {
 				TOC:     toc,
 			}
 
-			tmpl, err := template.ParseFiles("./layout.html")
+			tmpl, err := template.ParseFiles("./themes/" + themeName + "/layout.html")
 			if err != nil {
 				log.Fatalf("Error parsing template: %s", err)
 			}
@@ -258,7 +258,7 @@ func renderHomePage(summaries []PostSummary, outputDir string) {
 		panic(err)
 	}
 
-	tmpl, err := template.ParseFiles("./home.html")
+	tmpl, err := template.ParseFiles("./themes/" + themeName + "/home.html")
 	if err != nil {
 		log.Fatalf("Error parsing home template: %s", err)
 	}
