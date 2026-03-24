@@ -25,11 +25,12 @@ go mod tidy
 
 3. Run the generator
 ```bash
-go run main.go
+make
 ```
 
 Or use the compiled binary:
 ```bash
+make build
 ./kite-release
 ```
 
