@@ -1,4 +1,4 @@
-module kite
+module github.com/HimanshuSardana/kite
 
 go 1.25.0
 
