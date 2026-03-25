@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	internal "github.com/HimanshuSardana/kite/internal/build"
 )
@@ -53,30 +54,12 @@ func main() {
 		case "build":
 			internal.Build()
 		case "list-themes":
-			themeList := make([]string, 0)
-			themes, err := os.ReadDir("../themes/")
-			if err != nil {
-				log.Fatal("Error:", err)
-			}
-			for _, theme := range themes {
-				if theme.IsDir() {
-					themeList = append(themeList, string(theme.Name()))
-				}
-			}
+			themeList := internal.ListThemes()
+			fmt.Println(strings.Join(themeList, "\n"))
 		default:
-			showHelpMessage()
+			internal.ShowHelpMessage()
 		}
 	} else {
-		showHelpMessage()
+		internal.ShowHelpMessage()
 	}
-}
-
-func showHelpMessage() {
-	fmt.Println(`
-Usage: 	kite <SUBCOMMAND>
-
-SUBCOMMANDS:
-build
-serve
-`)
 }

@@ -238,3 +238,45 @@ func renderHomePage(summaries []PostSummary, outputDir string) {
 	}
 	fmt.Println("Home page written to", outPath)
 }
+
+func ListThemes() []string {
+	themeList := make([]string, 0)
+	themes, err := os.ReadDir("./themes")
+	if err != nil {
+		log.Fatal("Error:", err)
+	}
+	for _, theme := range themes {
+		if theme.IsDir() {
+			themeList = append(themeList, string(theme.Name()))
+		}
+	}
+
+	return themeList
+}
+
+func ShowHelpMessage() {
+	fmt.Println(`
+Kite — A lightweight static site generator
+
+USAGE:
+  kite <command> [options]
+
+COMMANDS:
+  build         Build the static site into the output directory
+  serve         Start a local development server with live reload
+  list-themes   List all available themes
+
+OPTIONS:
+  -h, --help    Show this help message
+
+EXAMPLES:
+  kite build
+  kite serve
+  kite serve --port 8080
+  kite list-themes
+
+DESCRIPTION:
+  Kite converts your content into a static website using themes and templates.
+  Use 'build' for production output and 'serve' for local development.
+`)
+}
