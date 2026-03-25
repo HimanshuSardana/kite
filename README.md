@@ -25,12 +25,14 @@ go mod tidy
 
 3. Run the generator
 ```bash
-make
+make build <theme-name>
 ```
+
+(The `themeName` is optional and defaults to `modern-light`)
 
 Or use the compiled binary:
 ```bash
-make build
+make build-release
 ./kite-release
 ```
 
@@ -59,11 +61,6 @@ Themes are located in the `themes/` directory.
 
 Available themes include:
 
-* `modern-light.css`
-* `modern-dark.css`
-* `everforest.css`
-* `rose-pine.css`
-* `terminal-gruvbox.css`
-* `tufte.css`
-
-To change a theme, update your layout or configuration to reference the desired CSS file.
+- Modern Light
+- Modern Dark
+- Gruvbox
