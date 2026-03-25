@@ -66,7 +66,11 @@ type Post struct {
 	Title string
 }
 
-func Build() {
+func Build(themeName string) {
+	if themeName == "" {
+		themeName = "modern-light"
+	}
+
 	summaries := make([]PostSummary, 0)
 
 	err := filepath.WalkDir(contentDir, func(path string, d fs.DirEntry, err error) error {
@@ -137,8 +141,9 @@ func Build() {
 	fmt.Println("All files processed!")
 
 	fmt.Println(posts)
+	fmt.Println(themeName)
 
-	renderHomePage(summaries, outputDir)
+	renderHomePage(themeName, summaries, outputDir)
 }
 
 func convertToHtml(path string) (Frontmatter, []byte, []TOCItem) {
@@ -194,7 +199,7 @@ func extractText(h *ast.Heading) string {
 	return text
 }
 
-func renderHomePage(summaries []PostSummary, outputDir string) {
+func renderHomePage(themeName string, summaries []PostSummary, outputDir string) {
 	sort.Slice(summaries, func(i, j int) bool {
 		return summaries[i].Date > summaries[j].Date
 	})

@@ -12,8 +12,6 @@ import (
 	internal "github.com/HimanshuSardana/kite/internal/build"
 )
 
-var themeName = "gruvbox"
-
 func copyFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
@@ -35,12 +33,14 @@ func copyFile(src, dst string) error {
 	return err
 }
 
+var defaultThemeName = "modern-dark"
+
 func main() {
 	args := os.Args
 	if len(args) > 1 {
 		switch args[1] {
 		case "serve":
-			copyFile("./themes/"+themeName+"/style.css", "./output/style.css")
+			copyFile("./themes/"+defaultThemeName+"/style.css", "./output/style.css")
 
 			fs := http.FileServer(http.Dir("./output/"))
 			http.Handle("/", fs)
@@ -52,7 +52,13 @@ func main() {
 				log.Fatalf("Error occured %s\n", err)
 			}
 		case "build":
-			internal.Build()
+			if len(os.Args) <= 2 {
+				themeName := defaultThemeName
+				internal.Build(themeName)
+			} else {
+				themeName := os.Args[2]
+				internal.Build(themeName)
+			}
 		case "list-themes":
 			themeList := internal.ListThemes()
 			fmt.Println(strings.Join(themeList, "\n"))
