@@ -1,5 +1,0 @@
-REFACTORRRR
-
-cmd/ -> contains main.go files
-internal/<abc> -> code that is not to be imported anywhere outside the internal dir
-pkg/<abc> -> code that is supposed to be imported anywhere outside the internal dir
