@@ -1,66 +1,87 @@
 # Kite
 
-Kite is a lightweight (2.7MB) static site generator written in Go. 
+A fast, minimal static site generator written in Go. Transform Markdown files into beautiful, themed websites with zero dependencies at runtime.
 
-## Features
+<p>
+  <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Go-1.25+-00ADD8.svg" alt="Go Version">
+</p>
 
-- Markdown to HTML conversion
-- Multiple built-in CSS themes
-- Simple layout templating
-- Fast builds with Go
-- Clean output structure
+## Installation
+
+```bash
+go install github.com/HimanshuSardana/kite@latest
+```
 
 ## Usage
 
-1. Clone the repository
+### Initialize a New Blog
+
 ```bash
-git clone https://github.com/HimanshuSardana/kite
-cd kite
+kite init
 ```
 
-2. Install dependencies
+This interactive command walks you through:
+- Blog name and site title
+- Author information
+- Theme selection
+- Creates `content/`, `output/`, `themes/` directories
+- Generates config and a sample post
+
+### Build Your Site
+
 ```bash
-go mod tidy
+kite build
 ```
 
-3. Run the generator
+Or specify a theme:
+
 ```bash
-make build <theme-name>
+kite build gruvbox
 ```
 
-(The `themeName` is optional and defaults to `modern-light`)
+### Preview Locally
 
-Or use the compiled binary:
 ```bash
-make build-release
-./kite-release
+kite serve
 ```
 
-Modify the `config.yaml` file with your info, it'll be used to generate the home page
+Visit `http://localhost:8000` to see your site.
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `kite init` | Initialize a new blog project |
+| `kite build` | Build the static site |
+| `kite build <theme>` | Build with a specific theme |
+| `kite serve` | Start local development server |
+| `kite serve --port 8080` | Serve on custom port |
+| `kite list-themes` | Show available themes |
+
+## Configuration
+
+Edit `config.yaml` to customize your site:
+
 ```yaml
-siteTitle: <enter your site's title>
-authorName: <enter your name>
-authorRole: <enter your role>
-authorBio: <enter your bio>
+siteTitle: "Your Blog Name"
+authorName: "Your Name"
+authorRole: "Writer & Developer"
+authorBio: "A short bio about yourself"
+defaultTheme: "modern-light"
+siteUrl: "https://your-domain.com"
 ```
 
+## Themes
 
-To write new posts
-- Add Markdown files inside the `content/` directory.
-- Each file will be converted into its own page.
-- Folder structure is preserved in output.
+Kite comes with 9 built-in themes:
+- modern-light
+- modern-dark
+- modern-dark-2
+- modern-dark-catppuccin
+- everforest
+- gruvbox
+- rose-pine
+- terminal-gruvbox
+- tufte
 
-Example:
-```
-content/test.md → output/test/index.html
-```
-
-## Inbuilt Themes
-
-Themes are located in the `themes/` directory.
-
-Available themes include:
-
-- Modern Light
-- Modern Dark
-- Gruvbox

@@ -1,17 +1,15 @@
 all: run
 
 run:
-	go run ./cmd
+	go run .
 
 build:
-	go run ./cmd build
+	go build .
 
 build-release:
-	echo "Building Kite release"
-	go build -ldflags="-s -w" -o kite-release ./cmd
+	go build -ldflags="-s -w" -o kite-release
 	upx --best --lzma kite-release
-	echo "Successfully built release binary"
 	stat -c %s ./kite-release
 
 serve:
-	go run ./cmd serve
+	go run . serve
