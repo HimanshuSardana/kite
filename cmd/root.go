@@ -26,8 +26,17 @@ func Execute() {
 		runServe(args)
 	case "list-themes":
 		runListThemes(args)
+	case "init":
+		runInit(args)
 	default:
 		build.ShowHelpMessage()
+	}
+}
+
+func runInit(args []string) {
+	if err := RunInit(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
 	}
 }
 
@@ -42,6 +51,7 @@ COMMANDS:
   build         Build the static site into the output directory
   serve         Start a local development server with live reload
   list-themes   List all available themes
+  init          Initialize a new blog project
 
 OPTIONS:
   -h, --help    Show this help message
@@ -51,6 +61,7 @@ EXAMPLES:
   kite build gruvbox
   kite serve
   kite list-themes
+  kite init
 
 DESCRIPTION:
   Kite converts your content into a static website using themes and templates.
