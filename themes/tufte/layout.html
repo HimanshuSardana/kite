@@ -137,6 +137,8 @@
         margin: 2rem auto;
       }
 
+      main { display: flex; flex-direction: column; align-items: center; }
+
       .toc-wrap {
         margin: 2rem 0;
         padding: 1rem;
@@ -151,21 +153,86 @@
         color: #555;
         margin: 0 0 0.5rem;
         display: block;
+        cursor: pointer;
       }
 
       .toc ul {
         margin: 0;
         padding-left: 1rem;
+        list-style: none;
       }
+
+      .toc li {
+        padding: 0.15rem 0;
+        margin: 0;
+      }
+
+      .toc li::before { display: none; }
 
       .toc a {
         color: #333;
         text-decoration: none;
         font-size: 0.95rem;
+        display: block;
+        padding: 0.15rem 0;
       }
 
       .toc a:hover {
         color: #0066cc;
+      }
+
+      .toc a.active {
+        color: #0066cc;
+        font-weight: 500;
+      }
+
+      .toc-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #888;
+        margin-bottom: 0.5rem;
+        width: 100%;
+        text-align: left;
+      }
+
+      .toc-toggle svg { transition: transform 140ms ease; }
+      .toc-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
+
+      .toc-body {
+        overflow: hidden;
+        transition: max-height 240ms ease, opacity 200ms ease;
+        max-height: 500px;
+        opacity: 1;
+      }
+
+      .toc-body.collapsed { max-height: 0; opacity: 0; }
+
+      @media (max-width: 699px) {
+        .toc-title { display: none; }
+      }
+
+      @media (min-width: 700px) and (max-width: 1099px) {
+        .toc { display: block; background: transparent; border: none; padding: 0; }
+        .toc-title { display: block; }
+        .toc-body { max-height: none !important; opacity: 1 !important; }
+      }
+
+      @media (min-width: 1100px) {
+        main { flex-direction: row; align-items: flex-start; max-width: 1100px; }
+        .toc-wrap { position: sticky; top: 6rem; width: 200px; flex-shrink: 0; margin-right: 3rem; order: -1; background: transparent; padding: 0; }
+        .toc { background: transparent; border: none; padding: 0; }
+        .toc-title { display: block; }
+        .toc-body { max-height: none !important; opacity: 1 !important; }
+        .article { flex: 1; max-width: 680px; }
+        main > *:not(.toc-wrap):not(.article) { max-width: 680px; }
       }
 
       nav {
@@ -246,30 +313,78 @@
     </nav>
 
     <main>
-      <header class="article-header">
-        <h1>{{ .Title }}</h1>
-      </header>
-
       {{ if .TOC }}
       <div class="toc-wrap">
-        <details open>
+        <button class="toc-toggle" aria-expanded="true" aria-controls="toc-body">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          Contents
+        </button>
+        <details class="toc" open>
           <summary class="toc-title">Contents</summary>
-          <ul>
-            {{ range .TOC }}
-            <li>
-              <a href="#{{ .ID }}">{{ .Text }}</a>
-            </li>
-            {{ end }}
-          </ul>
+          <div class="toc-body" id="toc-body">
+            <ul>
+              {{ range .TOC }}
+              <li>
+                <a href="#{{ .ID }}">{{ .Text }}</a>
+              </li>
+              {{ end }}
+            </ul>
+          </div>
         </details>
       </div>
       {{ end }}
 
-      <article class="prose">{{ .Content }}</article>
+      <article class="article">
+        <h1>{{ .Title }}</h1>
+        {{ .Content }}
+      </article>
     </main>
 
     <footer>
       <span>&copy; {{ .Year }} Kite</span>
     </footer>
+
+    <script>
+      const toggle = document.querySelector(".toc-toggle");
+      const body = document.getElementById("toc-body");
+      const details = document.querySelector(".toc");
+
+      if (toggle && body) {
+        toggle.addEventListener("click", () => {
+          const expanded = toggle.getAttribute("aria-expanded") === "true";
+          toggle.setAttribute("aria-expanded", String(!expanded));
+          body.classList.toggle("collapsed", expanded);
+        });
+      }
+
+      const tocLinks = document.querySelectorAll(".toc a");
+
+      if (tocLinks.length > 0) {
+        const headingIDs = Array.from(tocLinks).map((a) => decodeURIComponent(a.getAttribute("href").slice(1)));
+        const headings = headingIDs.map((id) => document.getElementById(id)).filter(Boolean);
+
+        let current = null;
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                current = entry.target.id;
+              }
+            });
+
+            tocLinks.forEach((a) => {
+              const id = decodeURIComponent(a.getAttribute("href").slice(1));
+              a.classList.toggle("active", id === current);
+            });
+          },
+          { rootMargin: "0px 0px -70% 0px", threshold: 0 }
+        );
+
+        headings.forEach((h) => observer.observe(h));
+      }
+    </script>
   </body>
 </html>
