@@ -216,7 +216,7 @@ func RunInit() error {
 
 	dirs := []string{"content", "output", "themes"}
 	for _, dir := range dirs {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return fmt.Errorf("creating %s directory: %w", dir, err)
 		}
 	}
@@ -233,7 +233,7 @@ authorBio: "%s"
 defaultTheme: "%s"
 `, siteTitle, m.authorName, m.authorRole, m.authorBio, theme)
 
-	if err := os.WriteFile("config.yaml", []byte(configContent), 0644); err != nil {
+	if err := os.WriteFile("config.yaml", []byte(configContent), 0o644); err != nil {
 		return fmt.Errorf("writing config: %w", err)
 	}
 
@@ -250,7 +250,7 @@ defaultTheme: "%s"
 		"- Run `kite serve` to preview locally\n\n" +
 		"Enjoy blogging!\n"
 
-	if err := os.WriteFile("content/1.md", []byte(sampleContent), 0644); err != nil {
+	if err := os.WriteFile("content/1.md", []byte(sampleContent), 0o644); err != nil {
 		return fmt.Errorf("writing sample content: %w", err)
 	}
 
