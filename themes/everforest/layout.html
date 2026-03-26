@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="{{ .Title }}" />
+    <title>{{ .Title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-okaidia.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/plugins/autoloader/prism-autoloader.min.js"></script>
+    <style>
+      :root {
+        --bg0: #2d3130;
+        --bg1: #343f3e;
+        --bg2: #3a4845;
+        --bg3: #445055;
+        --bg4: #4c5a5a;
+        --bg5: #596461;
+        --fg: #d3c6aa;
+        --fg-dim: #9da9a0;
+        --fg-muted: #5a6f68;
+        --red: #e67e80;
+        --orange: #e69875;
+        --yellow: #dbbc7f;
+        --green: #a7c080;
+        --aqua: #83c092;
+        --blue: #7fbbb3;
+        --purple: #d699b6;
+        --accent: var(--green);
+        --accent-2: var(--aqua);
+        --accent-dim: rgba(167, 192, 128, 0.1);
+        --accent-glow: rgba(167, 192, 128, 0.06);
+        --border: #404d49;
+        --border-soft: rgba(167, 192, 128, 0.08);
+        --serif: "Crimson Pro", Georgia, serif;
+        --sans: "Familjen Grotesk", system-ui, sans-serif;
+        --mono: "JetBrains Mono", ui-monospace, monospace;
+        --radius: 4px;
+        --max-w: 720px;
+        --transition: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        padding: 3.5rem 2rem 6rem;
+        background-color: var(--bg1);
+        background-image:
+          radial-gradient(
+            ellipse 90% 40% at 50% -10%,
+            rgba(83, 192, 146, 0.04) 0%,
+            transparent 65%
+          ),
+          url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23a7c080' fill-opacity='0.018'%3E%3Ccircle cx='1' cy='1' r='1'/%3E%3C/g%3E%3C/svg%3E");
+        color: var(--fg);
+        font-family: var(--serif);
+        line-height: 1.82;
+        font-size: 19px;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      body > * {
+        max-width: var(--max-w);
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      h1, h2, h3, h4 {
+        font-family: var(--sans);
+        line-height: 1.18;
+        letter-spacing: -0.02em;
+        scroll-margin-top: 1.5rem;
+      }
+
+      h1 {
+        font-size: clamp(2.1rem, 5vw, 2.8rem);
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--fg);
+        text-shadow: 0 0 40px rgba(167, 192, 128, 0.18);
+      }
+
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-top: 3.5rem;
+        color: var(--aqua);
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-top: 2.2rem;
+        color: var(--yellow);
+      }
+
+      p {
+        margin: 1.35rem 0;
+        color: var(--fg);
+      }
+
+      a {
+        color: var(--aqua);
+        text-decoration-line: underline;
+        text-decoration-color: rgba(131, 192, 146, 0.35);
+        text-underline-offset: 3px;
+        text-decoration-thickness: 1px;
+      }
+
+      a:hover {
+        color: var(--green);
+        text-decoration-color: var(--green);
+      }
+
+      ul, ol {
+        margin: 1.3rem 0;
+        padding-left: 0;
+        list-style: none;
+      }
+
+      ul li, ol li {
+        position: relative;
+        padding-left: 1.6rem;
+        margin: 0.5rem 0;
+        color: var(--fg);
+      }
+
+      ul li::before {
+        content: "◆";
+        position: absolute;
+        left: 0;
+        font-size: 0.45rem;
+        top: 0.6em;
+        color: var(--green);
+      }
+
+      code {
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        background: var(--bg0);
+        color: var(--orange);
+        padding: 0.18rem 0.4rem;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        word-break: break-word;
+      }
+
+      pre {
+        background: var(--bg0);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--green);
+        padding: 1.4rem 1.6rem;
+        overflow-x: auto;
+        border-radius: var(--radius);
+        margin: 2rem 0;
+      }
+
+      pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        color: var(--fg);
+        font-size: 0.87rem;
+        line-height: 1.7;
+      }
+
+      blockquote {
+        margin: 2.5rem 0;
+        padding: 1.2rem 1.6rem;
+        background: var(--bg2);
+        border-left: 3px solid var(--green);
+        border-radius: 0 var(--radius) var(--radius) 0;
+      }
+
+      blockquote p {
+        margin: 0;
+        font-style: italic;
+        font-size: 1.08rem;
+        color: #c4bb9e;
+      }
+
+      img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        margin: 2.5rem auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 2rem 0;
+        font-size: 0.88rem;
+        font-family: var(--mono);
+        background: var(--bg2);
+        border-radius: var(--radius);
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+
+      thead {
+        background: var(--bg3);
+      }
+
+      th {
+        text-align: left;
+        padding: 0.7rem 1rem;
+        font-size: 0.67rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--aqua);
+        border-bottom: 1px solid var(--border);
+        font-weight: 500;
+      }
+
+      td {
+        padding: 0.6rem 1rem;
+        border-bottom: 1px solid var(--border-soft);
+        color: var(--fg-dim);
+      }
+
+      hr {
+        border: none;
+        margin: 3.5rem auto;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--border) 25%,
+          var(--border) 75%,
+          transparent
+        );
+      }
+
+      .toc-wrap {
+        margin: 2.5rem 0;
+      }
+
+      .toc {
+        background: var(--bg0);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--green);
+        border-radius: 3px;
+        padding: 1rem 1.2rem;
+      }
+
+      .toc-title {
+        font-size: 0.8rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--green);
+        margin: 0 0 0.8rem;
+        display: block;
+      }
+
+      .toc ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .toc li {
+        padding: 0.2rem 0;
+        margin: 0;
+      }
+
+      .toc li::before {
+        display: none;
+      }
+
+      .toc a {
+        font-size: 0.85rem;
+        color: var(--fg-dim);
+        text-decoration: none;
+      }
+
+      .toc a:hover {
+        color: var(--green);
+      }
+
+      nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 0 3rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 3.5rem;
+      }
+
+      nav .logo {
+        font-family: var(--sans);
+        font-weight: 700;
+        font-size: 1.05rem;
+        letter-spacing: -0.02em;
+        color: var(--fg);
+        text-decoration: none;
+      }
+
+      nav .logo span {
+        color: var(--green);
+      }
+
+      nav ul {
+        display: flex;
+        gap: 2rem;
+        margin: 0;
+        padding: 0;
+      }
+
+      nav ul li::before {
+        display: none;
+      }
+
+      nav a {
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--fg-muted);
+        text-decoration: none;
+      }
+
+      nav a:hover {
+        color: var(--aqua);
+      }
+
+      footer {
+        margin-top: 5rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.04em;
+        color: var(--fg-muted);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      @media (max-width: 700px) {
+        body {
+          padding: 2rem 1.3rem 4rem;
+          font-size: 17px;
+        }
+        h1 {
+          font-size: 1.9rem;
+        }
+        h2 {
+          font-size: 1.25rem;
+        }
+        nav ul {
+          gap: 1.2rem;
+        }
+        footer {
+          flex-direction: column;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- topbar -->
+    <nav>
+      <a href="/" class="logo">Kite<span>.</span></a>
+      <ul>
+        <li><a href="/">Home</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <!-- article header -->
+      <header class="article-header">
+        <h1 class="article-h1">{{ .Title }}</h1>
+      </header>
+
+      <!-- TOC -->
+      {{ if .TOC }}
+      <div class="toc-wrap">
+        <details class="toc" open>
+          <summary class="toc-title">Contents</summary>
+          <ul>
+            {{ range .TOC }}
+            <li>
+              <a href="#{{ .ID }}">{{ .Text }}</a>
+            </li>
+            {{ end }}
+          </ul>
+        </details>
+      </div>
+      {{ end }}
+
+      <!-- article content -->
+      <article class="prose">{{ .Content }}</article>
+    </main>
+
+    <footer>
+      <span>&copy; {{ .Year }} Kite</span>
+    </footer>
+  </body>
+</html>
