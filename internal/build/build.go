@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"time"
 
 	"github.com/HimanshuSardana/kite/pkg/content"
 	"github.com/HimanshuSardana/kite/pkg/themes"
@@ -82,6 +83,7 @@ func Build(opts BuildOptions) error {
 			Title:   parsed.Frontmatter.Title,
 			Content: template.HTML(parsed.Content),
 			TOC:     parsed.TOC,
+			Year:    time.Now().Year(),
 		}
 
 		if err := RenderPage(tmpl, outputPath, page); err != nil {

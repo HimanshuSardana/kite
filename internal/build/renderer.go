@@ -16,6 +16,7 @@ type Page struct {
 	Title   string
 	Content template.HTML
 	TOC     []TOCItem
+	Year    int
 }
 
 type HomePageData struct {
