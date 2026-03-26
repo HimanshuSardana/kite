@@ -1,17 +1,11 @@
 package main
 
 import (
-	"fmt"
-
 	_ "net/http/pprof"
+
+	cmd "github.com/HimanshuSardana/kite/cmd"
 )
 
-func showHelpMessage() {
-	fmt.Println(`
-Usage: 	kite <SUBCOMMAND>
-
-SUBCOMMANDS:
-build
-serve
-`)
+func main() {
+	cmd.Execute()
 }

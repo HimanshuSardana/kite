@@ -1,6 +1,6 @@
 # Kite
 
-Kite is a lightweight (2.8MB) static site generator written in Go. 
+Kite is a lightweight (2.7MB) static site generator written in Go. 
 
 ## Features
 
