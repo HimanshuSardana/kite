@@ -12,6 +12,7 @@ type Config struct {
 	AuthorRole   string `yaml:"authorRole"`
 	AuthorBio    string `yaml:"authorBio"`
 	DefaultTheme string `yaml:"defaultTheme"`
+	SiteURL      string `yaml:"siteUrl"`
 }
 
 func Load(path string) (*Config, error) {

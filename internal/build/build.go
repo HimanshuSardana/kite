@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/HimanshuSardana/kite/pkg/config"
 	"github.com/HimanshuSardana/kite/pkg/content"
 	"github.com/HimanshuSardana/kite/pkg/themes"
 )
@@ -43,6 +44,11 @@ func Build(opts BuildOptions) error {
 		opts.ConfigPath = DefaultConfigPath
 	}
 
+	cfg, err := config.Load(opts.ConfigPath)
+	if err != nil {
+		log.Printf("Warning: Could not load config: %v", err)
+	}
+
 	themePath := themes.GetThemePath(opts.ThemesDir, opts.ThemeName)
 
 	files, err := content.ListContentFiles(opts.ContentDir)
@@ -53,7 +59,7 @@ func Build(opts BuildOptions) error {
 	summaries := make([]content.PostSummary, 0, len(files))
 
 	for _, file := range files {
-		fmt.Println("Processing:", file.Path)
+		start := time.Now()
 
 		parsed, err := ParseMarkdown(file.Path)
 		if err != nil {
@@ -89,12 +95,23 @@ func Build(opts BuildOptions) error {
 		if err := RenderPage(tmpl, outputPath, page); err != nil {
 			log.Printf("Error rendering page: %v", err)
 		}
+
+		elapsed := time.Since(start).Milliseconds()
+		fmt.Printf("Compiling %s (%dms)\n", parsed.Frontmatter.Title, elapsed)
 	}
 
 	fmt.Println("All files processed!")
 
 	if err := RenderHomePage(themePath, opts.OutputDir, opts.ConfigPath, summaries); err != nil {
 		log.Printf("Error rendering home page: %v", err)
+	}
+
+	siteURL := "https://your-site.com"
+	if cfg != nil && cfg.SiteURL != "" {
+		siteURL = cfg.SiteURL
+	}
+	if err := GenerateRSS(opts.OutputDir, opts.ConfigPath, siteURL, summaries); err != nil {
+		log.Printf("Error generating RSS feed: %v", err)
 	}
 
 	return nil
