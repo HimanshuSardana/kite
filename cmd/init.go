@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 
 	"github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -36,18 +38,18 @@ var (
 )
 
 type InitModel struct {
-	step         int
-	blogName     string
-	siteTitle    string
-	authorName   string
-	authorRole   string
-	authorBio    string
-	theme        string
-	themes       []string
-	cursor       int
-	inputBuffer  string
-	quitting     bool
-	focusedInput bool
+	step        int
+	blogName    string
+	siteTitle   string
+	authorName  string
+	authorRole  string
+	authorBio   string
+	theme       string
+	themes      []string
+	cursor      int
+	inputBuffer string
+	quitting    bool
+	finished    bool
 }
 
 func (m *InitModel) Init() tea.Cmd {
@@ -140,6 +142,8 @@ func (m *InitModel) handleEnter() (tea.Model, tea.Cmd) {
 	case 6:
 		m.theme = m.themes[m.cursor]
 		m.step++
+		m.finished = true
+		return m, tea.Quit
 	}
 	return m, nil
 }
@@ -190,9 +194,64 @@ func (m *InitModel) View() string {
 			}
 		}
 		s += "\n" + helpStyle.Render("↑↓ to select · enter to confirm")
+	default:
+		s = "Setting up your blog..."
 	}
 
 	return s
+}
+
+func copyDir(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		dstPath := filepath.Join(dst, rel)
+		if info.IsDir() {
+			return os.MkdirAll(dstPath, 0o755)
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(dstPath, data, info.Mode())
+	})
+}
+
+func downloadThemes() error {
+	themesURL := "https://github.com/HimanshuSardana/kite/archive/refs/heads/main.zip"
+
+	fmt.Println("  Downloading themes from GitHub...")
+
+	cmd := exec.Command("curl", "-sL", themesURL, "-o", "kite-main.zip")
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to download: %w", err)
+	}
+
+	cmd = exec.Command("unzip", "-qo", "-d", ".", "kite-main.zip")
+	if err := cmd.Run(); err != nil {
+		os.Remove("kite-main.zip")
+		return fmt.Errorf("failed to extract: %w", err)
+	}
+
+	if err := os.MkdirAll("themes", 0o755); err != nil {
+		return err
+	}
+
+	cmd = exec.Command("cp", "-r", "kite-main/themes/.", "themes/")
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to copy themes: %w", err)
+	}
+
+	os.Remove("kite-main.zip")
+	os.RemoveAll("kite-main")
+
+	fmt.Println("  ✓ Themes downloaded successfully")
+	return nil
 }
 
 func RunInit() error {
@@ -207,6 +266,11 @@ func RunInit() error {
 		return nil
 	}
 
+	if !m.finished {
+		fmt.Println("\nInit not complete.")
+		return nil
+	}
+
 	fmt.Println("\n" + headerStyle.Render("Setting up your blog..."))
 
 	theme := m.theme
@@ -218,6 +282,27 @@ func RunInit() error {
 	for _, dir := range dirs {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return fmt.Errorf("creating %s directory: %w", dir, err)
+		}
+	}
+
+	if _, err := os.Stat("themes/modern-light/layout.html"); err == nil {
+		fmt.Println("  ✓ Found themes in current directory")
+	} else if entries, err := os.ReadDir("../themes"); err == nil && len(entries) > 0 {
+		fmt.Println("  ✓ Copying themes from parent directory...")
+		for _, e := range entries {
+			if e.IsDir() {
+				src := filepath.Join("../themes", e.Name())
+				dst := filepath.Join("themes", e.Name())
+				if err := copyDir(src, dst); err != nil {
+					fmt.Printf("  ⚠ Could not copy theme %s: %v\n", e.Name(), err)
+				}
+			}
+		}
+		fmt.Println("  ✓ Themes copied successfully")
+	} else {
+		fmt.Println("  ⚠ No themes found - downloading from GitHub...")
+		if err := downloadThemes(); err != nil {
+			return fmt.Errorf("downloading themes: %w", err)
 		}
 	}
 
@@ -242,7 +327,6 @@ defaultTheme: "%s"
 		"date: 2026-01-01\n" +
 		"tags: [getting-started]\n" +
 		"---\n\n" +
-		"# Welcome\n\n" +
 		"This is your first post! Write your content in Markdown here.\n\n" +
 		"## Getting Started\n\n" +
 		"- Add more posts to the content/ directory\n" +

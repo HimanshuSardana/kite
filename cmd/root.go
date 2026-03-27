@@ -65,5 +65,6 @@ EXAMPLES:
 
 DESCRIPTION:
   Kite converts your content into a static website using themes and templates.
+  Use 'kite init' to start a new blog project.
 `)
 }
