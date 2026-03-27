@@ -7,11 +7,17 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/HimanshuSardana/kite/pkg/config"
 )
 
 func runServe(args []string) {
 	themeName := DefaultTheme
 	port := DefaultPort
+
+	if cfg, err := config.Load("config.yaml"); err == nil && cfg.DefaultTheme != "" {
+		themeName = cfg.DefaultTheme
+	}
 
 	for i := 2; i < len(args); i++ {
 		if args[i] == "--port" && i+1 < len(args) {
