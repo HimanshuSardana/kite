@@ -89,6 +89,13 @@ func (i listItem) FilterValue() string { return i.title }
 
 func (m *InitModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.step == 5 {
+		if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "enter" {
+			selected := m.themeList.SelectedItem().(listItem)
+			m.theme = selected.title
+			m.step++
+			m.finished = true
+			return m, tea.Quit
+		}
 		var cmd tea.Cmd
 		m.themeList, cmd = m.themeList.Update(msg)
 		return m, cmd
