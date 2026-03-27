@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -45,15 +46,14 @@ type InitModel struct {
 	authorRole  string
 	authorBio   string
 	theme       string
-	themes      []string
-	cursor      int
+	themeList   list.Model
 	inputBuffer string
 	quitting    bool
 	finished    bool
 }
 
 func (m *InitModel) Init() tea.Cmd {
-	m.themes = []string{
+	themes := []string{
 		"modern-light",
 		"modern-dark",
 		"modern-dark-2",
@@ -64,10 +64,36 @@ func (m *InitModel) Init() tea.Cmd {
 		"terminal-gruvbox",
 		"tufte",
 	}
+
+	items := make([]list.Item, len(themes))
+	for i, t := range themes {
+		items[i] = listItem{t}
+	}
+
+	m.themeList = list.New(items, list.NewDefaultDelegate(), 10, 20)
+	m.themeList.Title = "Select a theme:"
+	m.themeList.SetShowStatusBar(false)
+	m.themeList.SetFilteringEnabled(false)
+	m.themeList.SetWidth(40)
+
 	return nil
 }
 
+type listItem struct {
+	title string
+}
+
+func (i listItem) Title() string       { return i.title }
+func (i listItem) Description() string { return "" }
+func (i listItem) FilterValue() string { return i.title }
+
 func (m *InitModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.step == 5 {
+		var cmd tea.Cmd
+		m.themeList, cmd = m.themeList.Update(msg)
+		return m, cmd
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -76,20 +102,6 @@ func (m *InitModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "enter":
 			return m.handleEnter()
-		case "up":
-			if m.step == 6 {
-				m.cursor--
-				if m.cursor < 0 {
-					m.cursor = len(m.themes) - 1
-				}
-			}
-		case "down":
-			if m.step == 6 {
-				m.cursor++
-				if m.cursor >= len(m.themes) {
-					m.cursor = 0
-				}
-			}
 		case "backspace":
 			if len(m.inputBuffer) > 0 {
 				m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
@@ -132,15 +144,8 @@ func (m *InitModel) handleEnter() (tea.Model, tea.Cmd) {
 		m.inputBuffer = ""
 		m.step++
 	case 5:
-		m.theme = m.inputBuffer
-		m.inputBuffer = ""
-		if m.theme != "" {
-			m.step = 7
-		} else {
-			m.step++
-		}
-	case 6:
-		m.theme = m.themes[m.cursor]
+		selected := m.themeList.SelectedItem().(listItem)
+		m.theme = selected.title
 		m.step++
 		m.finished = true
 		return m, tea.Quit
@@ -179,21 +184,9 @@ func (m *InitModel) View() string {
 			inputStyle.Render(m.inputBuffer+"_") + "\n\n" +
 			helpStyle.Render("type to enter · enter to continue · esc to cancel")
 	case 5:
-		s = headerStyle.Render("╭─── Kite Setup") + "\n" +
-			"\n" + "Preferred theme (or press enter to skip):" + "\n\n" +
-			inputStyle.Render(m.inputBuffer+"_") + "\n\n" +
-			helpStyle.Render("type to enter · enter to skip · esc to cancel")
-	case 6:
 		s = headerStyle.Render("╭─── Kite Setup") + "\n\n" +
-			"Select a theme:\n\n"
-		for i, theme := range m.themes {
-			if i == m.cursor {
-				s += "  " + buttonActiveStyle.Render("● "+theme) + "\n"
-			} else {
-				s += "  " + buttonStyle.Render("○ "+theme) + "\n"
-			}
-		}
-		s += "\n" + helpStyle.Render("↑↓ to select · enter to confirm")
+			m.themeList.View() + "\n" +
+			helpStyle.Render("↑↓ to select · enter to confirm")
 	default:
 		s = "Setting up your blog..."
 	}
