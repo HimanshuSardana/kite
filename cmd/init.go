@@ -89,12 +89,18 @@ func (i listItem) FilterValue() string { return i.title }
 
 func (m *InitModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.step == 5 {
-		if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "enter" {
-			selected := m.themeList.SelectedItem().(listItem)
-			m.theme = selected.title
-			m.step++
-			m.finished = true
-			return m, tea.Quit
+		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+			if keyMsg.String() == "enter" {
+				selected := m.themeList.SelectedItem().(listItem)
+				m.theme = selected.title
+				m.step++
+				m.finished = true
+				return m, tea.Quit
+			}
+			if keyMsg.String() == "esc" {
+				m.quitting = true
+				return m, tea.Quit
+			}
 		}
 		var cmd tea.Cmd
 		m.themeList, cmd = m.themeList.Update(msg)
@@ -106,7 +112,7 @@ func (m *InitModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "esc":
 			m.quitting = true
-			return m, nil
+			return m, tea.Quit
 		case "enter":
 			return m.handleEnter()
 		case "backspace":
