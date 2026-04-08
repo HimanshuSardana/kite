@@ -74,7 +74,7 @@ siteUrl: "https://your-domain.com"
 
 ## Themes
 
-Kite comes with 9 built-in themes:
+Kite comes with 10 built-in themes:
 - modern-light
 - modern-dark
 - modern-dark-2
@@ -84,4 +84,5 @@ Kite comes with 9 built-in themes:
 - rose-pine
 - terminal-gruvbox
 - tufte
+- magical
 
