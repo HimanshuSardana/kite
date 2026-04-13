@@ -3,7 +3,10 @@ package build
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/HimanshuSardana/kite/pkg/config"
@@ -96,6 +99,10 @@ func Build(opts BuildOptions) error {
 			log.Printf("Error rendering page: %v", err)
 		}
 
+		if err := copyImages(file.Path, parsed.Images, opts.ContentDir, opts.OutputDir); err != nil {
+			log.Printf("Error copying images: %v", err)
+		}
+
 		elapsed := time.Since(start).Milliseconds()
 		fmt.Printf("Compiling %s (%dms)\n", parsed.Frontmatter.Title, elapsed)
 	}
@@ -159,4 +166,50 @@ DESCRIPTION:
   Kite converts your content into a static website using themes and templates.
   Use 'build' for production output and 'serve' for local development.
 `)
+}
+
+func copyImages(mdFilePath string, images []string, contentDir, outputDir string) error {
+	if len(images) == 0 {
+		return nil
+	}
+
+	mdDir := filepath.Dir(mdFilePath)
+
+	for _, imgPath := range images {
+		srcPath := filepath.Clean(filepath.Join(mdDir, imgPath))
+
+		relPath, err := filepath.Rel(contentDir, srcPath)
+		if err != nil {
+			return err
+		}
+
+		dstPath := filepath.Join(outputDir, relPath)
+
+		if err := copyFile(srcPath, dstPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func copyFile(src, dst string) error {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+		return err
+	}
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	return err
 }

@@ -24,6 +24,7 @@ type ParsedPage struct {
 	Frontmatter content.Frontmatter
 	Content     []byte
 	TOC         []TOCItem
+	Images      []string
 }
 
 func ParseMarkdown(path string) (*ParsedPage, error) {
@@ -63,10 +64,13 @@ func ParseMarkdown(path string) (*ParsedPage, error) {
 
 	output := markdown.Render(doc, renderer)
 
+	images := extractImages(doc)
+
 	return &ParsedPage{
 		Frontmatter: matter,
 		Content:     output,
 		TOC:         toc,
+		Images:      images,
 	}, nil
 }
 
@@ -79,4 +83,17 @@ func extractText(h *ast.Heading) string {
 		return ast.GoToNext
 	})
 	return text
+}
+
+func extractImages(doc ast.Node) []string {
+	var images []string
+	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
+		if img, ok := node.(*ast.Image); ok && entering {
+			if len(img.Destination) > 0 {
+				images = append(images, string(img.Destination))
+			}
+		}
+		return ast.GoToNext
+	})
+	return images
 }
