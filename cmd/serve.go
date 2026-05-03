@@ -7,11 +7,18 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
+	"sync"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/HimanshuSardana/kite/internal/build"
 	"github.com/HimanshuSardana/kite/pkg/config"
-	"github.com/fsnotify/fsnotify"
+)
+
+var (
+	reloadChan = make(chan struct{})
+	reloadMutex sync.RWMutex
 )
 
 func runServe(args []string) {
@@ -25,8 +32,8 @@ func runServe(args []string) {
 	for i := 2; i < len(args); i++ {
 		if args[i] == "--port" && i+1 < len(args) {
 			port = args[i+1]
-		}
-		if args[i] != "--port" && args[i] != "--help" && args[i] != "-h" {
+			i++ // skip the port value
+		} else if args[i] != "--help" && args[i] != "-h" {
 			themeName = args[i]
 		}
 	}
@@ -37,8 +44,12 @@ func runServe(args []string) {
 	// Start file watcher for hot-reload
 	go watchAndRebuild(themeName)
 
+	// Serve static files
 	fs := http.FileServer(http.Dir("./output/"))
 	http.Handle("/", fs)
+
+	// SSE endpoint for live-reload
+	http.HandleFunc("/livereload", liveReloadHandler)
 
 	log.Printf("Serving on http://localhost:%s (with hot-reload)", port)
 
@@ -65,6 +76,10 @@ func buildSite(themeName string) {
 		log.Printf("Build error: %v", err)
 	} else {
 		log.Println("Build completed successfully!")
+		// Inject live-reload script into HTML files
+		injectLiveReloadScript()
+		// Notify browsers to reload
+		triggerReload()
 	}
 }
 
@@ -162,4 +177,76 @@ func copyFile(src, dst string) error {
 
 	_, err = io.Copy(out, in)
 	return err
+}
+
+func injectLiveReloadScript() {
+	outputDir := "./output"
+	liveReloadScript := `\n<script>
+(function() {
+    var evtSource = new EventSource('/livereload');
+    evtSource.addEventListener('reload', function() {
+        console.log('Reloading page...');
+        location.reload();
+    });
+})();
+</script>
+`
+
+	err := filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(path, ".html") {
+			// Read file
+			content, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+
+			html := string(content)
+
+			// Only inject if not already present
+			if !strings.Contains(html, "EventSource('/livereload')") {
+				// Inject before </body>
+				if idx := strings.Index(html, "</body>"); idx != -1 {
+					html = html[:idx] + liveReloadScript + html[idx:]
+					if err := os.WriteFile(path, []byte(html), info.Mode()); err != nil {
+						log.Printf("Warning: Could not inject live-reload script into %s: %v", path, err)
+					}
+				}
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Printf("Warning: Error injecting live-reload script: %v", err)
+	}
+}
+
+func triggerReload() {
+	go func() {
+		reloadChan <- struct{}{}
+	}()
+}
+
+func liveReloadHandler(w http.ResponseWriter, r *http.Request) {
+	// Set SSE headers
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	// Keep connection open and send reload events
+	for {
+		select {
+		case <-reloadChan:
+			fmt.Fprintf(w, "event: reload\ndata: {}\n\n")
+			if f, ok := w.(http.Flusher); ok {
+				f.Flush()
+			}
+		case <-r.Context().Done():
+			return
+		}
+	}
 }
