@@ -86,6 +86,35 @@ code[class*=language-]{font-family:'Iosevka',ui-monospace,Menlo,monospace}
 .cmdk-hint kbd{border:1px solid var(--border);border-radius:4px;padding:0 .3rem;font-family:'Iosevka',ui-monospace,monospace}
 footer{border-top:1px solid var(--border);margin-top:3rem;padding:1.5rem 0 2.5rem;font-size:.78rem;color:var(--faint)}
 footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+
+/* view transitions */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:vt-fade-out .28s ease both}
+::view-transition-new(root){animation:vt-fade-in .28s ease both}
+@keyframes vt-fade-out{to{opacity:0}}
+@keyframes vt-fade-in{from{opacity:0}}
+html[data-vt-nav="traverse"]::view-transition-old(root){animation:vt-back-out .38s cubic-bezier(.3,.7,.3,1) both}
+@keyframes vt-back-out{to{opacity:0;transform:translateX(-72px)}}
+/* circular theme reveal expanding from the toggle */
+html[data-vt="theme"]::view-transition-old(root),html[data-vt="theme"]::view-transition-new(root){animation:none;mix-blend-mode:normal}
+html[data-vt="theme"]::view-transition-new(root){z-index:2;clip-path:circle(0 at var(--vt-x) var(--vt-y));animation:vt-circle .6s cubic-bezier(.3,.7,.3,1) forwards}
+@keyframes vt-circle{to{clip-path:circle(var(--vt-r) at var(--vt-x) var(--vt-y))}}
+/* home entrance */
+.rise{animation:vt-rise .65s cubic-bezier(.2,.7,.2,1) both}
+.rise-1{animation-delay:.06s}.rise-2{animation-delay:.12s}.rise-3{animation-delay:.18s}
+html.from-vt .rise{animation:none}
+@keyframes vt-rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){@view-transition{navigation:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}html{scroll-behavior:auto}}
+
+/* scroll reveals (below-fold blocks; gated on html.js so no-JS stays visible) */
+html.js .rv{opacity:0;transform:translateY(16px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
+html.js .rv.in{opacity:1;transform:none}
+/* docs entrance: fade+rise normally, slide-from-right on back/forward without VT */
+.prose{animation:vt-doc-in .45s cubic-bezier(.2,.7,.2,1) backwards}
+html.from-vt .prose{animation:none}
+html.traverse .prose{animation:vt-doc-back .4s cubic-bezier(.3,.7,.3,1) backwards}
+@keyframes vt-doc-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes vt-doc-back{from{opacity:0;transform:translateX(48px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -98,14 +127,14 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem
 </div>
 </div>
 <div class="wrap">
-<main class="prose">
-<a class="back" href="../"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> kite</a>
-<h1>{{ .Title }}</h1>
 {{ if .TOC }}
 <nav class="toc"><span class="toc-title">On this page</span>
 <ul><span class="toc-ind" id="toc-ind" aria-hidden="true"></span>{{ range .TOC }}<li><a href="#{{ .ID }}" data-cmd-section>{{ .Text }}</a></li>{{ end }}</ul>
 </nav>
 {{ end }}
+<main class="prose">
+<a class="back" href="../"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> kite</a>
+<h1>{{ .Title }}</h1>
 {{ .Content }}
 </main>
 <footer><div class="wrap"><span>© {{ .Year }} Himanshu Sardana</span><span>built with kite</span></div></footer>
@@ -122,14 +151,49 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem
     document.getElementById('icon-moon').style.display = light ? 'block' : 'none';
   }
   sync();
-  btn.addEventListener('click', function(){
+  btn.addEventListener('click', function(e){
     var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-    if (next === 'dark') document.documentElement.removeAttribute('data-theme');
-    else document.documentElement.setAttribute('data-theme', next);
-    try { localStorage.setItem('kite-theme', next); } catch(e) {}
-    sync();
+    function flip(){
+      if (next === 'dark') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('kite-theme', next); } catch(e) {}
+      sync();
+    }
+    if (document.startViewTransition) {
+      var x = (e && e.clientX != null) ? e.clientX : window.innerWidth / 2;
+      var y = (e && e.clientY != null) ? e.clientY : 0;
+      var root = document.documentElement;
+      var r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+      root.style.setProperty('--vt-x', Math.round(x) + 'px');
+      root.style.setProperty('--vt-y', Math.round(y) + 'px');
+      root.style.setProperty('--vt-r', Math.ceil(r) + 'px');
+      root.dataset.vt = 'theme';
+      var t = document.startViewTransition(flip);
+      if (t && t.finished) {
+        t.finished.then(function(){ delete root.dataset.vt; }, function(){ delete root.dataset.vt; });
+      }
+    } else { flip(); }
   });
 })();
+// cross-document transitions: slide the old page out on back/forward,
+// and skip the home rise-in when arriving through a transition
+window.addEventListener('pageswap', function(e){
+  if (!e.viewTransition) return;
+  var nav = (e.activation && e.activation.navigationType) || '';
+  if (nav) document.documentElement.dataset.vtNav = nav;
+});
+function markNav(){
+  var root = document.documentElement;
+  if (root.classList.contains('from-vt')) return;
+  try {
+    if (performance.navigation && performance.navigation.type === 2) root.classList.add('traverse');
+  } catch(e) {}
+}
+window.addEventListener('pagereveal', function(e){
+  if (e.viewTransition) document.documentElement.classList.add('from-vt');
+  else markNav();
+});
+document.addEventListener('DOMContentLoaded', markNav);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" data-autoloader-path="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/"></script>
