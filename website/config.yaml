@@ -1,0 +1,6 @@
+siteTitle: "kite — a minimal SSG in Go"
+authorName: "kite"
+authorRole: "Markdown in. Website out."
+authorBio: "A fast, minimal static site generator written in Go. Zero runtime dependencies, plain HTML themes, live reload, RSS included."
+defaultTheme: "showcase"
+siteUrl: "https://himanshu.co/kite"
