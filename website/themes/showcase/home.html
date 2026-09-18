@@ -86,6 +86,25 @@ footer.site{margin-top:4rem;border-top:1px solid var(--border);padding:2rem 0 3r
 .foot-cols a{display:block;color:var(--muted);text-decoration:none;margin-bottom:.35rem}
 .foot-cols a:hover{color:var(--text)}
 .foot-base{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;color:var(--faint);font-size:.78rem}
+
+/* view transitions */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:vt-fade-out .28s ease both}
+::view-transition-new(root){animation:vt-fade-in .28s ease both}
+@keyframes vt-fade-out{to{opacity:0}}
+@keyframes vt-fade-in{from{opacity:0}}
+html[data-vt-nav="traverse"]::view-transition-old(root){animation:vt-back-out .38s cubic-bezier(.3,.7,.3,1) both}
+@keyframes vt-back-out{to{opacity:0;transform:translateX(-72px)}}
+/* circular theme reveal expanding from the toggle */
+html[data-vt="theme"]::view-transition-old(root),html[data-vt="theme"]::view-transition-new(root){animation:none;mix-blend-mode:normal}
+html[data-vt="theme"]::view-transition-new(root){z-index:2;clip-path:circle(0 at var(--vt-x) var(--vt-y));animation:vt-circle .6s cubic-bezier(.3,.7,.3,1) forwards}
+@keyframes vt-circle{to{clip-path:circle(var(--vt-r) at var(--vt-x) var(--vt-y))}}
+/* home entrance */
+.rise{animation:vt-rise .65s cubic-bezier(.2,.7,.2,1) both}
+.rise-1{animation-delay:.06s}.rise-2{animation-delay:.12s}.rise-3{animation-delay:.18s}
+html.from-vt .rise{animation:none}
+@keyframes vt-rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){@view-transition{navigation:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
@@ -103,16 +122,16 @@ footer.site{margin-top:4rem;border-top:1px solid var(--border);padding:2rem 0 3r
 </div>
 
 <div class="wrap">
-<div class="logo-row">
+<div class="logo-row rise">
 <div class="logo-mark"><svg width="26" height="26" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6 L36 19 L24 32 L12 19 Z" fill="#a3e635"/><path d="M24 6 L24 32 M12 19 L36 19" stroke="#4d7c0f" stroke-width="2"/><path d="M24 32 C 24 36, 21 37, 20 40" stroke="#4d7c0f" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M20 36 L23 38 L20 40 Z" fill="#4d7c0f"/></svg></div>
 <div class="logo-name">kite</div>
 </div>
 
-<h1 class="tagline-title">Markdown in, website out.</h1>
+<h1 class="tagline-title rise rise-1">Markdown in, website out.</h1>
 
-<p class="lede">Free and open source static site generator written in <a href="https://go.dev" target="_blank" rel="noreferrer">Go</a>. Markdown files in, website out — with themes, live reload and RSS, and no bundler, lockfile, or 100MB of RAM on your VPS. This page is <a href="https://github.com/HimanshuSardana/kite">kite</a> output.</p>
+<p class="lede rise rise-2">Free and open source static site generator written in <a href="https://go.dev" target="_blank" rel="noreferrer">Go</a>. Markdown files in, website out — with themes, live reload and RSS, and no bundler, lockfile, or 100MB of RAM on your VPS. This page is <a href="https://github.com/HimanshuSardana/kite">kite</a> output.</p>
 
-<div class="btn-row">
+<div class="btn-row rise rise-3">
 <a class="btn btn-solid" href="#docs"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Quickstart</a>
 <a class="btn btn-ghost" href="https://github.com/HimanshuSardana/kite" target="_blank" rel="noreferrer">
 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
@@ -187,14 +206,40 @@ View on GitHub</a>
     document.getElementById('icon-moon').style.display = light ? 'block' : 'none';
   }
   sync();
-  btn.addEventListener('click', function(){
+  btn.addEventListener('click', function(e){
     var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-    if (next === 'dark') document.documentElement.removeAttribute('data-theme');
-    else document.documentElement.setAttribute('data-theme', next);
-    try { localStorage.setItem('kite-theme', next); } catch(e) {}
-    sync();
+    function flip(){
+      if (next === 'dark') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('kite-theme', next); } catch(e) {}
+      sync();
+    }
+    if (document.startViewTransition) {
+      var x = (e && e.clientX != null) ? e.clientX : window.innerWidth / 2;
+      var y = (e && e.clientY != null) ? e.clientY : 0;
+      var root = document.documentElement;
+      var r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+      root.style.setProperty('--vt-x', Math.round(x) + 'px');
+      root.style.setProperty('--vt-y', Math.round(y) + 'px');
+      root.style.setProperty('--vt-r', Math.ceil(r) + 'px');
+      root.dataset.vt = 'theme';
+      var t = document.startViewTransition(flip);
+      if (t && t.finished) {
+        t.finished.then(function(){ delete root.dataset.vt; }, function(){ delete root.dataset.vt; });
+      }
+    } else { flip(); }
   });
 })();
+// cross-document transitions: slide the old page out on back/forward,
+// and skip the home rise-in when arriving through a transition
+window.addEventListener('pageswap', function(e){
+  if (!e.viewTransition) return;
+  var nav = (e.activation && e.activation.navigationType) || '';
+  if (nav) document.documentElement.dataset.vtNav = nav;
+});
+window.addEventListener('pagereveal', function(e){
+  if (e.viewTransition) document.documentElement.classList.add('from-vt');
+});
 
 </script>
 
