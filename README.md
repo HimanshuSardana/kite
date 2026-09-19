@@ -7,6 +7,8 @@ A fast, minimal static site generator written in Go. Transform Markdown files in
   <img src="https://img.shields.io/badge/Go-1.25+-00ADD8.svg" alt="Go Version">
 </p>
 
+![kite demo — install, init, build in milliseconds](demo.gif)
+
 ## Website
 
 Docs and landing page live at **https://himanshu.co/kite** — source in [`website/`](website/) (built with kite itself).
