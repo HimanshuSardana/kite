@@ -14,10 +14,12 @@ type Frontmatter struct {
 }
 
 type PostSummary struct {
-	Title string
-	Slug  string
-	Date  string
-	Tags  []string
+	Title       string
+	Slug        string
+	Date        string
+	Tags        []string
+	WordCount   int
+	ReadingTime int
 }
 
 // SlugifyTag maps a display tag ("My Tag") to its URL slug ("my-tag").

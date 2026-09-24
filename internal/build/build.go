@@ -88,10 +88,12 @@ func Build(opts BuildOptions) error {
 		}
 
 		summaries = append(summaries, content.PostSummary{
-			Title: parsed.Frontmatter.Title,
-			Slug:  file.Slug,
-			Date:  parsed.Frontmatter.Date,
-			Tags:  parsed.Frontmatter.Tags,
+			Title:       parsed.Frontmatter.Title,
+			Slug:        file.Slug,
+			Date:        parsed.Frontmatter.Date,
+			Tags:        parsed.Frontmatter.Tags,
+			WordCount:   parsed.WordCount,
+			ReadingTime: ReadingMinutes(parsed.WordCount),
 		})
 
 		outputPath, err := content.GetOutputPath(opts.ContentDir, file.Path, opts.OutputDir)
@@ -106,10 +108,12 @@ func Build(opts BuildOptions) error {
 		}
 
 		page := Page{
-			Title:   parsed.Frontmatter.Title,
-			Content: template.HTML(parsed.Content),
-			TOC:     parsed.TOC,
-			Year:    time.Now().Year(),
+			Title:       parsed.Frontmatter.Title,
+			Content:     template.HTML(parsed.Content),
+			TOC:         parsed.TOC,
+			Year:        time.Now().Year(),
+			WordCount:   parsed.WordCount,
+			ReadingTime: ReadingMinutes(parsed.WordCount),
 		}
 
 		if err := RenderPage(tmpl, outputPath, page); err != nil {

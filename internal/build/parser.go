@@ -24,6 +24,7 @@ type ParsedPage struct {
 	Frontmatter content.Frontmatter
 	Content     []byte
 	TOC         []TOCItem
+	WordCount   int
 }
 
 func ParseMarkdown(path string) (*ParsedPage, error) {
@@ -67,6 +68,7 @@ func ParseMarkdown(path string) (*ParsedPage, error) {
 		Frontmatter: matter,
 		Content:     output,
 		TOC:         toc,
+		WordCount:   CountWords(output),
 	}, nil
 }
 
@@ -79,4 +81,37 @@ func extractText(h *ast.Heading) string {
 		return ast.GoToNext
 	})
 	return text
+}
+
+// CountWords counts whitespace-separated words in rendered HTML,
+// ignoring tags so markup doesn't inflate the count.
+func CountWords(rendered []byte) int {
+	inTag := false
+	words := 0
+	inWord := false
+	for _, r := range string(rendered) {
+		switch {
+		case r == '<':
+			inTag = true
+			inWord = false
+		case r == '>':
+			inTag = false
+		case !inTag && (r == ' ' || r == '\n' || r == '\t' || r == '\r'):
+			inWord = false
+		case !inTag:
+			if !inWord {
+				words++
+				inWord = true
+			}
+		}
+	}
+	return words
+}
+
+// ReadingMinutes estimates minutes at 200 wpm, rounded up.
+func ReadingMinutes(words int) int {
+	if words <= 0 {
+		return 0
+	}
+	return (words + 199) / 200
 }
