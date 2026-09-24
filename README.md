@@ -59,6 +59,11 @@ Visit `http://localhost:8000` to see your site.
 Anything in `static/` is copied as-is to `output/` on every build
 (favicons, images, `robots.txt`, extra CSS). `kite serve` watches it too.
 
+### Feeds & Sitemap
+
+Every build regenerates `feed.xml` and `sitemap.xml`, and adds an RSS
+autodiscovery `<link>` to each page — no theme changes needed.
+
 ## Commands
 
 | Command | Description |
