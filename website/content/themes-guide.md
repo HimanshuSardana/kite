@@ -30,7 +30,7 @@ Receives the site config plus the post list:
 </ul>
 ```
 
-Available fields: `SiteTitle`, `AuthorName`, `AuthorRole`, `AuthorBio`, `Year`, and `Posts` (each with `Title`, `Slug`, `Date`, `Tags`).
+Available fields: `SiteTitle`, `AuthorName`, `AuthorRole`, `AuthorBio`, `Year`, and `Posts` (each with `Title`, `Slug`, `Date`, `Tags`, `WordCount`, `ReadingTime` — e.g. `{{ .ReadingTime }} min read`).
 
 Template helper: `{{ . | tagSlug }}` slugifies a tag for its index URL
 (`My Tag` → `my-tag`), matching the generated `/tag/<slug>/` pages.
@@ -51,7 +51,7 @@ Receives the rendered post:
 {{ .Content }}
 ```
 
-Fields: `Title`, `Content` (already-rendered HTML), `TOC` (heading `Text` + `ID` pairs), `Year`.
+Fields: `Title`, `Content` (already-rendered HTML), `TOC` (heading `Text` + `ID` pairs), `WordCount`, `ReadingTime` (minutes at 200 wpm), `Year`.
 
 ## Styling
 
