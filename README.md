@@ -59,6 +59,11 @@ Visit `http://localhost:8000` to see your site.
 Anything in `static/` is copied as-is to `output/` on every build
 (favicons, images, `robots.txt`, extra CSS). `kite serve` watches it too.
 
+### Drafts
+
+`draft: true` in frontmatter hides a post from normal builds.
+`kite build --drafts` / `kite serve --drafts` includes it for preview.
+
 ### Feeds & Sitemap
 
 Every build regenerates `feed.xml` and `sitemap.xml`, and adds an RSS

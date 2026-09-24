@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/HimanshuSardana/kite/pkg/config"
@@ -21,12 +23,13 @@ const (
 )
 
 type BuildOptions struct {
-	ThemeName  string
-	ContentDir string
-	OutputDir  string
-	ThemesDir  string
-	StaticDir  string
-	ConfigPath string
+	ThemeName     string
+	ContentDir    string
+	OutputDir     string
+	ThemesDir     string
+	StaticDir     string
+	ConfigPath    string
+	IncludeDrafts bool
 }
 
 func Build(opts BuildOptions) error {
@@ -62,6 +65,7 @@ func Build(opts BuildOptions) error {
 	}
 
 	summaries := make([]content.PostSummary, 0, len(files))
+	skippedDrafts := 0
 
 	for _, file := range files {
 		start := time.Now()
@@ -69,6 +73,17 @@ func Build(opts BuildOptions) error {
 		parsed, err := ParseMarkdown(file.Path)
 		if err != nil {
 			log.Printf("Error parsing %s: %v", file.Path, err)
+			continue
+		}
+
+		if parsed.Frontmatter.Draft && !opts.IncludeDrafts {
+			skippedDrafts++
+			// Remove previously built output so drafts never leak
+			// into production from an earlier --drafts build.
+			if outputPath, err := content.GetOutputPath(opts.ContentDir, file.Path, opts.OutputDir); err == nil {
+				os.RemoveAll(outputPath)
+				os.Remove(filepath.Dir(outputPath)) // best-effort: drops the dir if now empty
+			}
 			continue
 		}
 
@@ -106,6 +121,9 @@ func Build(opts BuildOptions) error {
 	}
 
 	fmt.Println("All files processed!")
+	if skippedDrafts > 0 {
+		fmt.Printf("Skipped %d draft(s) (build with --drafts to include)\n", skippedDrafts)
+	}
 
 	if err := RenderHomePage(themePath, opts.OutputDir, opts.ConfigPath, summaries); err != nil {
 		log.Printf("Error rendering home page: %v", err)

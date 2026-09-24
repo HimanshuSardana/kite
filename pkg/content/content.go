@@ -10,6 +10,7 @@ type Frontmatter struct {
 	Title string   `yaml:"title"`
 	Date  string   `yaml:"date"`
 	Tags  []string `yaml:"tags"`
+	Draft bool     `yaml:"draft"`
 }
 
 type PostSummary struct {

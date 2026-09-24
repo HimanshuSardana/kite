@@ -22,6 +22,19 @@ Your markdown here...
 
 Dates in `YYYY-MM-DD` format are displayed nicely on the home page (e.g. "Sep 2026"). Tags render as pills under each post title.
 
+## Drafts
+
+Add `draft: true` to a post's frontmatter to hide it from `kite build`
+(home page, RSS, sitemap and output all skip it). Preview drafts with:
+
+```sh
+kite build --drafts   # include drafts in output/
+kite serve --drafts   # preview with drafts at http://localhost:8000
+```
+
+Rebuilding without `--drafts` also removes stale draft output, so drafts
+never leak into production from an earlier preview.
+
 ## Markdown
 
 Standard Markdown, rendered with gomarkdown: headings, lists, quotes, tables, fenced code blocks with language hints, links and images.
