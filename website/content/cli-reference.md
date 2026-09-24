@@ -11,6 +11,7 @@ Everything kite does, in one place.
 | Command | Description |
 |---|---|
 | `kite init` | Interactively scaffold a new site (content, themes, config, sample post) |
+| `kite new hello.md` | Create a post with stamped frontmatter (`--draft` starts it as a draft) |
 | `kite build` | Build with the `defaultTheme` from `config.yaml` |
 | `kite build <theme>` | Build with a specific theme, e.g. `kite build gruvbox` |
 | `kite serve` | Build + serve `output/` at `http://localhost:8000` with live reload |

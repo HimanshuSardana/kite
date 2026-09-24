@@ -28,6 +28,8 @@ func Execute() {
 		runListThemes(args)
 	case "init":
 		runInit(args)
+	case "new":
+		runNew(args)
 	default:
 		build.ShowHelpMessage()
 	}
@@ -52,6 +54,7 @@ COMMANDS:
   serve         Start a local development server with live reload
   list-themes   List all available themes
   init          Initialize a new blog project
+  new           Create a new post with frontmatter
 
 OPTIONS:
   -h, --help    Show this help message
@@ -62,6 +65,7 @@ EXAMPLES:
   kite serve
   kite list-themes
   kite init
+  kite new hello-world.md
 
 DESCRIPTION:
   Kite converts your content into a static website using themes and templates.

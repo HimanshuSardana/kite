@@ -188,6 +188,7 @@ COMMANDS:
   build         Build the static site into the output directory
   serve         Start a local development server with live reload
   list-themes   List all available themes
+  new           Create a new post with frontmatter
 
 OPTIONS:
   -h, --help    Show this help message
