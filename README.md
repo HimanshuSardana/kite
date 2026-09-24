@@ -80,6 +80,7 @@ autodiscovery `<link>` to each page — no theme changes needed.
 | `kite serve` | Start local development server |
 | `kite serve --port 8080` | Serve on custom port |
 | `kite list-themes` | Show available themes |
+| `kite check` | Check `output/` for broken internal links (exit 1 if any) |
 
 ## Configuration
 

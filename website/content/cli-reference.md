@@ -18,6 +18,7 @@ Everything kite does, in one place.
 | `kite serve --port 8080` | Serve on a custom port |
 | `kite serve <theme>` | Preview a specific theme, e.g. `kite serve rose-pine` |
 | `kite list-themes` | List themes in `./themes` |
+| `kite check` | Check `output/` for broken internal links (CI: `kite build && kite check`) |
 
 Theme resolution order: explicit argument → `defaultTheme` in `config.yaml` → `modern-light`.
 
