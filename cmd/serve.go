@@ -24,6 +24,7 @@ var (
 func runServe(args []string) {
 	themeName := DefaultTheme
 	port := DefaultPort
+	includeDrafts := false
 
 	if cfg, err := config.Load("config.yaml"); err == nil && cfg.DefaultTheme != "" {
 		themeName = cfg.DefaultTheme
@@ -33,16 +34,22 @@ func runServe(args []string) {
 		if args[i] == "--port" && i+1 < len(args) {
 			port = args[i+1]
 			i++ // skip the port value
+		} else if args[i] == "--drafts" {
+			includeDrafts = true
 		} else if args[i] != "--help" && args[i] != "-h" {
 			themeName = args[i]
 		}
 	}
 
+	if includeDrafts {
+		log.Println("Including drafts")
+	}
+
 	// Initial build
-	buildSite(themeName)
+	buildSite(themeName, includeDrafts)
 
 	// Start file watcher for hot-reload
-	go watchAndRebuild(themeName)
+	go watchAndRebuild(themeName, includeDrafts)
 
 	// Serve static files
 	fs := http.FileServer(http.Dir("./output/"))
@@ -58,7 +65,7 @@ func runServe(args []string) {
 	}
 }
 
-func buildSite(themeName string) {
+func buildSite(themeName string, includeDrafts bool) {
 	log.Println("Building site...")
 
 	themeCSS := fmt.Sprintf("./themes/%s/style.css", themeName)
@@ -69,7 +76,8 @@ func buildSite(themeName string) {
 	}
 
 	opts := build.BuildOptions{
-		ThemeName: themeName,
+		ThemeName:     themeName,
+		IncludeDrafts: includeDrafts,
 	}
 
 	if err := build.Build(opts); err != nil {
@@ -83,7 +91,7 @@ func buildSite(themeName string) {
 	}
 }
 
-func watchAndRebuild(themeName string) {
+func watchAndRebuild(themeName string, includeDrafts bool) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Printf("Failed to create watcher: %v", err)
@@ -138,7 +146,7 @@ func watchAndRebuild(themeName string) {
 					debounceTimer.Stop()
 				}
 				debounceTimer = time.AfterFunc(500*time.Millisecond, func() {
-					buildSite(themeName)
+					buildSite(themeName, includeDrafts)
 				})
 			}
 		case err, ok := <-watcher.Errors:
