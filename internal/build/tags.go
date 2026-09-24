@@ -1,9 +1,12 @@
 package build
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
+	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/HimanshuSardana/kite/pkg/content"
@@ -76,7 +79,7 @@ func RenderTagPages(themePath, outputDir string, tags []TagInfo) error {
 			Content: template.HTML(list),
 			Year:    time.Now().Year(),
 		}
-		if err := RenderPage(tmpl, outputDir+"/tag/"+t.Slug+"/index.html", page); err != nil {
+		if err := renderTagPage(tmpl, outputDir+"/tag/"+t.Slug+"/index.html", page); err != nil {
 			return fmt.Errorf("rendering tag %s: %w", t.Name, err)
 		}
 	}
@@ -118,4 +121,34 @@ func tagSlugs(tags []TagInfo) []string {
 		slugs = append(slugs, t.Slug)
 	}
 	return slugs
+}
+
+// renderTagPage renders like RenderPage but pins relative theme assets
+// (e.g. ../style.css) to the site root with a <base> tag: tag pages live
+// two levels deep (/tag/<slug>/), where theme-relative paths would 404.
+// Tag content uses absolute links and carries no TOC, so this is safe.
+func renderTagPage(tmpl *template.Template, outputPath string, page Page) error {
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, page); err != nil {
+		return fmt.Errorf("executing template: %w", err)
+	}
+	html := buf.String()
+	if !strings.Contains(html, "<base") {
+		html = strings.Replace(html, "<head>", "<head>\n<base href=\"/\">", 1)
+	}
+	if err := os.MkdirAll(dirOf(outputPath), 0o755); err != nil {
+		return fmt.Errorf("creating directories: %w", err)
+	}
+	if err := os.WriteFile(outputPath, []byte(html), 0o644); err != nil {
+		return fmt.Errorf("writing tag page: %w", err)
+	}
+	return nil
+}
+
+func dirOf(path string) string {
+	i := strings.LastIndex(path, "/")
+	if i == -1 {
+		return "."
+	}
+	return path[:i]
 }
