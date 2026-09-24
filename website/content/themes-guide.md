@@ -32,6 +32,9 @@ Receives the site config plus the post list:
 
 Available fields: `SiteTitle`, `AuthorName`, `AuthorRole`, `AuthorBio`, `Year`, and `Posts` (each with `Title`, `Slug`, `Date`, `Tags`).
 
+Template helper: `{{ . | tagSlug }}` slugifies a tag for its index URL
+(`My Tag` → `my-tag`), matching the generated `/tag/<slug>/` pages.
+
 ## layout.html
 
 Receives the rendered post:

@@ -12,7 +12,7 @@ import (
 
 // GenerateSitemap writes sitemap.xml (home + one entry per post) into
 // outputDir. It mirrors the GenerateRSS post loop, so no new config needed.
-func GenerateSitemap(outputDir, siteURL string, posts []content.PostSummary) error {
+func GenerateSitemap(outputDir, siteURL string, posts []content.PostSummary, tagSlugs []string) error {
 	today := time.Now().Format("2006-01-02")
 
 	s := `<?xml version="1.0" encoding="UTF-8"?>` + "\n" +
@@ -26,6 +26,11 @@ func GenerateSitemap(outputDir, siteURL string, posts []content.PostSummary) err
 		}
 		s += `  <url><loc>` + escapeXML(siteURL) + `/` + escapeXML(post.Slug) +
 			`/</loc><lastmod>` + lastmod + `</lastmod></url>` + "\n"
+	}
+
+	for _, slug := range tagSlugs {
+		s += `  <url><loc>` + escapeXML(siteURL) + `/tag/` + escapeXML(slug) +
+			`/</loc><lastmod>` + today + `</lastmod></url>` + "\n"
 	}
 
 	s += `</urlset>`

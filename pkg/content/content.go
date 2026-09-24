@@ -20,6 +20,27 @@ type PostSummary struct {
 	Tags  []string
 }
 
+// SlugifyTag maps a display tag ("My Tag") to its URL slug ("my-tag").
+// The same function backs generated /tag/ URLs and the tagSlug template
+// helper, so pills and pages can never disagree.
+func SlugifyTag(tag string) string {
+	var b strings.Builder
+	prevDash := false
+	for _, r := range strings.ToLower(tag) {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+			b.WriteRune(r)
+			prevDash = false
+		case r == ' ' || r == '-' || r == '_':
+			if !prevDash && b.Len() > 0 {
+				b.WriteByte('-')
+				prevDash = true
+			}
+		}
+	}
+	return strings.Trim(b.String(), "-")
+}
+
 type ContentFile struct {
 	Path        string
 	Slug        string

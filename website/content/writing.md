@@ -22,6 +22,12 @@ Your markdown here...
 
 Dates in `YYYY-MM-DD` format are displayed nicely on the home page (e.g. "Sep 2026"). Tags render as pills under each post title.
 
+## Tag pages
+
+Every build generates `/tag/<slug>/` indexes (plus a `/tag/` directory)
+from your tags — `Go` and `go` share one page, `My Tag` becomes `my-tag`.
+Tag pages are included in `sitemap.xml` automatically.
+
 ## Drafts
 
 Add `draft: true` to a post's frontmatter to hide it from `kite build`
