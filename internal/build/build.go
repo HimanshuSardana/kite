@@ -196,6 +196,7 @@ COMMANDS:
   serve         Start a local development server with live reload
   list-themes   List all available themes
   new           Create a new post with frontmatter
+  check         Check built site for broken internal links
 
 OPTIONS:
   -h, --help    Show this help message
