@@ -125,8 +125,15 @@ func Build(opts BuildOptions) error {
 		fmt.Printf("Skipped %d draft(s) (build with --drafts to include)\n", skippedDrafts)
 	}
 
+	// Collect before RenderHomePage: it reformats summary dates in place.
+	tags := CollectTags(summaries)
+
 	if err := RenderHomePage(themePath, opts.OutputDir, opts.ConfigPath, summaries); err != nil {
 		log.Printf("Error rendering home page: %v", err)
+	}
+
+	if err := RenderTagPages(themePath, opts.OutputDir, tags); err != nil {
+		log.Printf("Error rendering tag pages: %v", err)
 	}
 
 	siteURL := "https://your-site.com"
@@ -137,7 +144,7 @@ func Build(opts BuildOptions) error {
 		log.Printf("Error generating RSS feed: %v", err)
 	}
 
-	if err := GenerateSitemap(opts.OutputDir, siteURL, summaries); err != nil {
+	if err := GenerateSitemap(opts.OutputDir, siteURL, summaries, tagSlugs(tags)); err != nil {
 		log.Printf("Error generating sitemap: %v", err)
 	}
 

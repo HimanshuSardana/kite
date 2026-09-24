@@ -48,7 +48,9 @@ func RenderPage(tmpl *template.Template, outputPath string, data Page) error {
 }
 
 func LoadTemplate(themePath, templateFile string) (*template.Template, error) {
-	tmpl, err := template.ParseFiles(filepath.Join(themePath, templateFile))
+	tmpl, err := template.New(templateFile).Funcs(template.FuncMap{
+		"tagSlug": content.SlugifyTag,
+	}).ParseFiles(filepath.Join(themePath, templateFile))
 	if err != nil {
 		return nil, fmt.Errorf("parsing template: %w", err)
 	}
