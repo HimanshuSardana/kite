@@ -284,7 +284,7 @@ func RunInit() error {
 		theme = "modern-light"
 	}
 
-	dirs := []string{"content", "output", "themes"}
+	dirs := []string{"content", "output", "static", "themes"}
 	for _, dir := range dirs {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return fmt.Errorf("creating %s directory: %w", dir, err)
@@ -347,6 +347,7 @@ defaultTheme: "%s"
 	fmt.Println("  ✓ Created config.yaml")
 	fmt.Println("  ✓ Created content/ directory")
 	fmt.Println("  ✓ Created output/ directory")
+	fmt.Println("  ✓ Created static/ directory (copied as-is to output/)")
 	fmt.Println("  ✓ Created themes/ directory")
 	fmt.Println("  ✓ Created sample post (content/1.md)")
 	fmt.Println("\nRun `kite build` to generate your site!")

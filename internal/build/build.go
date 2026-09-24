@@ -15,6 +15,7 @@ const (
 	DefaultContentDir = "./content"
 	DefaultOutputDir  = "./output"
 	DefaultThemesDir  = "./themes"
+	DefaultStaticDir  = "./static"
 	DefaultConfigPath = "./config.yaml"
 	DefaultThemeName  = "modern-light"
 )
@@ -24,6 +25,7 @@ type BuildOptions struct {
 	ContentDir string
 	OutputDir  string
 	ThemesDir  string
+	StaticDir  string
 	ConfigPath string
 }
 
@@ -39,6 +41,9 @@ func Build(opts BuildOptions) error {
 	}
 	if opts.ThemesDir == "" {
 		opts.ThemesDir = DefaultThemesDir
+	}
+	if opts.StaticDir == "" {
+		opts.StaticDir = DefaultStaticDir
 	}
 	if opts.ConfigPath == "" {
 		opts.ConfigPath = DefaultConfigPath
@@ -112,6 +117,12 @@ func Build(opts BuildOptions) error {
 	}
 	if err := GenerateRSS(opts.OutputDir, opts.ConfigPath, siteURL, summaries); err != nil {
 		log.Printf("Error generating RSS feed: %v", err)
+	}
+
+	if n, err := CopyStatic(opts.StaticDir, opts.OutputDir); err != nil {
+		log.Printf("Error copying static files: %v", err)
+	} else if n > 0 {
+		fmt.Printf("Copied %d static files\n", n)
 	}
 
 	return nil
