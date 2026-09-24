@@ -103,11 +103,16 @@ func watchAndRebuild(themeName string) {
 		log.Printf("Warning: Could not watch themes directory: %v", err)
 	}
 
+	// Watch static/ so asset changes also trigger a rebuild
+	if err := addDirRecursive(watcher, "./static"); err != nil {
+		log.Printf("Warning: Could not watch static directory: %v", err)
+	}
+
 	if err := watcher.Add("./config.yaml"); err != nil {
 		log.Printf("Warning: Could not watch config.yaml: %v", err)
 	}
 
-	log.Println("Watching for changes in content/, themes/, and config.yaml...")
+	log.Println("Watching for changes in content/, themes/, static/, and config.yaml...")
 
 	var debounceTimer *time.Timer
 

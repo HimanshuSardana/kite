@@ -54,6 +54,11 @@ kite serve
 
 Visit `http://localhost:8000` to see your site.
 
+### Static Files
+
+Anything in `static/` is copied as-is to `output/` on every build
+(favicons, images, `robots.txt`, extra CSS). `kite serve` watches it too.
+
 ## Commands
 
 | Command | Description |
