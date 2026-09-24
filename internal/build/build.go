@@ -119,6 +119,20 @@ func Build(opts BuildOptions) error {
 		log.Printf("Error generating RSS feed: %v", err)
 	}
 
+	if err := GenerateSitemap(opts.OutputDir, siteURL, summaries); err != nil {
+		log.Printf("Error generating sitemap: %v", err)
+	}
+
+	feedTitle := "RSS"
+	if cfg != nil && cfg.SiteTitle != "" {
+		feedTitle = cfg.SiteTitle
+	}
+	if n, err := InjectFeedDiscovery(opts.OutputDir, siteURL, feedTitle); err != nil {
+		log.Printf("Error injecting feed discovery links: %v", err)
+	} else if n > 0 {
+		fmt.Printf("Feed discovery link added to %d pages\n", n)
+	}
+
 	if n, err := CopyStatic(opts.StaticDir, opts.OutputDir); err != nil {
 		log.Printf("Error copying static files: %v", err)
 	} else if n > 0 {
