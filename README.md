@@ -74,6 +74,7 @@ autodiscovery `<link>` to each page — no theme changes needed.
 | Command | Description |
 |---------|-------------|
 | `kite init` | Initialize a new blog project |
+| `kite new hello.md` | Create a post with stamped frontmatter (`--draft` starts it as a draft) |
 | `kite build` | Build the static site |
 | `kite build <theme>` | Build with a specific theme |
 | `kite serve` | Start local development server |
