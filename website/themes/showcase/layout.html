@@ -19,6 +19,7 @@ body{background:var(--bg);color:var(--muted);font-family:-apple-system,BlinkMacS
 .topbar{display:flex;align-items:center;justify-content:center;gap:1.4rem;padding:.9rem 1rem;font-size:.85rem;position:relative;max-width:900px;margin:0 auto}
 .topbar a.nl{color:var(--muted);text-decoration:none}
 .topbar a.nl:hover{color:var(--text)}
+.brand{position:absolute;left:1rem;font-size:1.05rem;font-weight:600;color:var(--text);text-decoration:none;letter-spacing:-.01em}
 .top-actions{position:absolute;right:1rem;display:flex;align-items:center;gap:.7rem}
 .icon-btn{background:none;border:none;cursor:pointer;color:var(--muted);padding:.25rem;display:flex;align-items:center}
 .icon-btn svg{display:block}
@@ -119,6 +120,7 @@ html.traverse .prose{animation:vt-doc-back .4s cubic-bezier(.3,.7,.3,1) backward
 </head>
 <body>
 <div class="topbar">
+<a class="brand" href="../">kite</a>
 <a class="nl" href="../">Home</a>
 <a class="nl" href="../#docs">Docs</a>
 <a class="nl" href="https://github.com/HimanshuSardana/kite" target="_blank" rel="noreferrer">GitHub</a>
