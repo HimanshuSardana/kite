@@ -63,6 +63,7 @@ func (m *InitModel) Init() tea.Cmd {
 		"rose-pine",
 		"terminal-gruvbox",
 		"tufte",
+		"notes",
 	}
 
 	items := make([]list.Item, len(themes))
