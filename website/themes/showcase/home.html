@@ -71,6 +71,15 @@ code{font-family:'Iosevka',ui-monospace,SFMono-Regular,Menlo,monospace;font-size
 .cmdk-hint kbd{border:1px solid var(--border);border-radius:4px;padding:0 .3rem;font-family:'Iosevka',ui-monospace,monospace}
 .cmd-box{background:var(--code-bg);border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;font-family:'Iosevka',ui-monospace,Menlo,monospace;font-size:.86rem;line-height:1.9;margin-top:1rem;overflow-x:auto;white-space:pre}
 .cmd-box .c{color:var(--faint)} .cmd-box .p{color:#65a30d}
+/* benchmarks */
+.bench-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin-top:1rem}
+@media(max-width:560px){.bench-grid{grid-template-columns:1fr}}
+.bench-card{border:1px solid var(--border);border-radius:12px;padding:.95rem 1.1rem;background:var(--code-bg)}
+.bench-num{font-family:'Iosevka',ui-monospace,Menlo,monospace;font-size:1.55rem;font-weight:600;color:var(--text);letter-spacing:-.02em;line-height:1.2}
+.bench-num span{font-size:.85rem;font-weight:500;color:#65a30d;margin-left:.1rem}
+.bench-cap{font-size:.8rem;color:var(--muted);margin-top:.3rem;line-height:1.5}
+.bench-note{font-size:.76rem;color:var(--faint);margin-top:.9rem;line-height:1.6}
+.bench-note code{color:var(--muted);background:var(--code-bg);padding:.1em .35em;border-radius:5px}
 /* faq */
 .qa{margin-bottom:1.4rem}
 .qa .q{color:var(--text);font-weight:600;margin-bottom:.2rem}
@@ -118,6 +127,7 @@ html.traverse .prose{animation:vt-doc-back .4s cubic-bezier(.3,.7,.3,1) both}
 <a class="brand" href="./">kite</a>
 <a class="nl hide-m" href="#docs">Docs</a>
 <a class="nl hide-m" href="#themes">Themes</a>
+<a class="nl hide-m" href="#benchmarks">Benchmarks</a>
 <a class="nl hide-m" href="#faq">FAQ</a>
 <a class="nl" href="https://github.com/HimanshuSardana/kite" target="_blank" rel="noreferrer">GitHub</a>
 <div class="top-actions">
@@ -175,6 +185,16 @@ View on GitHub</a>
 <li>Preview any of them with <code>kite serve &lt;name&gt;</code> — <a href="https://github.com/HimanshuSardana/kite/tree/main/themes" target="_blank" rel="noreferrer">browse source</a></li>
 </ul>
 
+<div class="sec-label" id="benchmarks">Benchmarks</div>
+<p class="lede" style="margin-bottom:0">No build daemon, no cache to warm — kite re-parses and re-renders the whole site on every run. Measured end to end with <code>go test ./internal/build -bench . -benchmem</code>.</p>
+<div class="bench-grid">
+<div class="bench-card"><div class="bench-num">0.09<span>ms</span></div><div class="bench-cap">to parse one Markdown post and render it to HTML</div></div>
+<div class="bench-card"><div class="bench-num">45<span>ms</span></div><div class="bench-cap">to build a 100-post site from scratch</div></div>
+<div class="bench-card"><div class="bench-num">230<span>ms</span></div><div class="bench-cap">to build a 500-post site — about 0.5&thinsp;ms per page</div></div>
+<div class="bench-card"><div class="bench-num">12<span>MB</span></div><div class="bench-cap">single static binary (stripped) — no runtime or lockfile</div></div>
+</div>
+<p class="bench-note">Benchmarks run on an Intel i5-8250U (2017 laptop), averaged over multiple iterations. Source: <a href="https://github.com/HimanshuSardana/kite/blob/main/internal/build/bench_test.go" target="_blank" rel="noreferrer">internal/build/bench_test.go</a>. Run <code>go test ./internal/build -bench . -benchmem</code> to reproduce on your own hardware.</p>
+
 <div class="sec-label" id="faq">FAQ</div>
 <div class="faq">
 <div class="qa"><p class="q">Is kite free?</p><p>Yes — free and open source. Grab it with <code>go install</code> (needs Go 1.25+). The output is plain static HTML, hostable anywhere.</p></div>
@@ -186,7 +206,7 @@ View on GitHub</a>
 
 <footer class="site">
 <div class="foot-cols">
-<div><h5>Product</h5><a href="#docs">Docs</a><a href="#themes">Themes</a><a href="#faq">FAQ</a></div>
+<div><h5>Product</h5><a href="#docs">Docs</a><a href="#themes">Themes</a><a href="#benchmarks">Benchmarks</a><a href="#faq">FAQ</a></div>
 <div><h5>Resources</h5><a href="quickstart/">Quickstart</a><a href="cli-reference/">CLI reference</a><a href="feed.xml">RSS</a></div>
 <div><h5>Project</h5><a href="https://github.com/HimanshuSardana/kite" target="_blank" rel="noreferrer">GitHub</a><a href="https://github.com/HimanshuSardana/kite/issues" target="_blank" rel="noreferrer">Issues</a></div>
 <div><h5>Author</h5><a href="https://github.com/HimanshuSardana" target="_blank" rel="noreferrer">Himanshu</a><a href="../">Portfolio</a></div>
@@ -393,7 +413,7 @@ window.__cmdkSections = [];   // progress: .content page injects its headings
 (function(){
   var root = document.documentElement;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  var els = document.querySelectorAll('.sec-label, .feat-list, .cmd-box, .faq, footer.site');
+  var els = document.querySelectorAll('.sec-label, .feat-list, .cmd-box, .bench-grid, .bench-note, .faq, footer.site');
   if (!els.length || !('IntersectionObserver' in window)) return;
   root.classList.add('js');
   var io = new IntersectionObserver(function(entries){
