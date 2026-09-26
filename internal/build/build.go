@@ -111,6 +111,10 @@ func Build(opts BuildOptions) error {
 			TOC:     parsed.TOC,
 			Year:    time.Now().Year(),
 		}
+		if cfg != nil {
+			page.SiteTitle = cfg.SiteTitle
+			page.AuthorName = cfg.AuthorName
+		}
 
 		if err := RenderPage(tmpl, outputPath, page); err != nil {
 			log.Printf("Error rendering page: %v", err)

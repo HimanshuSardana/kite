@@ -13,10 +13,12 @@ import (
 )
 
 type Page struct {
-	Title   string
-	Content template.HTML
-	TOC     []TOCItem
-	Year    int
+	Title      string
+	SiteTitle  string
+	AuthorName string
+	Content    template.HTML
+	TOC        []TOCItem
+	Year       int
 }
 
 type HomePageData struct {
