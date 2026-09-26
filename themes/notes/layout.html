@@ -102,6 +102,15 @@ code[class*=language-]{font-family:var(--mono)}
 .island-menu a{display:block;color:var(--muted);text-decoration:none;font-size:.82rem;line-height:1.35;padding:.5rem .7rem;border-radius:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .15s,color .15s}
 .island-menu a:hover{background:var(--accent-soft);color:var(--text)}
 .island-menu a.active{background:var(--accent-soft);color:var(--accent)}
+/* latex math */
+.prose .math{font-size:1.02em}
+.prose .math.display{display:block;text-align:center;margin:1.5em 0;overflow-x:auto;overflow-y:hidden}
+mjx-container{max-width:100%}
+mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;padding:.1em 0}
+/* latex diagrams (TikZ) */
+.prose .tikz{margin:1.6em 0;text-align:center}
+.prose .tikz svg{max-width:100%;height:auto}
+html:not([data-theme="light"]) .prose .tikz svg{filter:invert(1) hue-rotate(180deg)}
 /* footer */
 footer{border-top:1px solid var(--border);margin-top:3rem;padding:1.5rem 0 2.5rem;font-size:.78rem;color:var(--faint)}
 footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
@@ -123,6 +132,24 @@ html.from-vt .prose{animation:none}
 @keyframes vt-doc-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){@view-transition{navigation:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}html{scroll-behavior:auto}}
 </style>
+<script>
+// LaTeX math via MathJax. The Markdown parser already wraps $...$ and $$...$$
+// in .math spans with \(...\) / \[...\] delimiters; the extra $ delimiters
+// let raw LaTeX in HTML blocks work too.
+window.MathJax = {
+  tex: {
+    inlineMath: [['$','$'],['\\(','\\)']],
+    displayMath: [['$$','$$'],['\\[','\\]']],
+    processEscapes: true,
+    tags: 'none'
+  },
+  options: {
+    skipHtmlTags: ['script','noscript','style','textarea','pre','code','annotation','annotation-xml']
+  },
+  chtml: { scale: 1.04 }
+};
+</script>
+<script async id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"></script>
 </head>
 <body>
 <div class="topbar">
@@ -292,7 +319,27 @@ window.addEventListener('pagereveal', function(e){
   onScroll();
 })();
 </script>
+<script>
+// LaTeX diagrams: rewrite ```tikz fenced blocks into <script type="text/tikz">
+// elements for TikZJax, which renders them to SVG in the browser. This runs
+// before Prism and before tikzjax.js below, so the scripts already exist when
+// TikZJax scans the page on load.
+(function(){
+  var blocks = document.querySelectorAll('pre > code.language-tikz');
+  Array.prototype.forEach.call(blocks, function(code){
+    var pre = code.parentNode;
+    var fig = document.createElement('figure');
+    fig.className = 'tikz';
+    var script = document.createElement('script');
+    script.type = 'text/tikz';
+    script.textContent = code.textContent;
+    fig.appendChild(script);
+    pre.parentNode.replaceChild(fig, pre);
+  });
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" data-autoloader-path="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/"></script>
+<script src="https://tikzjax.com/v1/tikzjax.js"></script>
 </body>
 </html>
