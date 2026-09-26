@@ -55,18 +55,26 @@ code[class*=language-]{font-family:'Iosevka',ui-monospace,Menlo,monospace}
 .prose :not(pre)>code{background:var(--code-bg);color:var(--text);padding:.12em .38em;border-radius:6px}
 .prose pre{background:var(--code-bg);border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;overflow:auto;font-size:.82rem;line-height:1.8;margin:1.2em 0}
 .prose blockquote{border-left:2px solid var(--faint);padding-left:1rem;margin:1.2em 0;color:var(--text)}
-.toc{position:fixed;top:7rem;left:max(1.25rem,calc(50vw - 330px - 210px));width:180px;margin:0;max-height:calc(100vh - 10rem);overflow-y:auto}
-.toc-title{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:.7rem}
-.toc ul{list-style:none;margin:0;padding:0;position:relative}
-.toc ul::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--border)}
-.toc li{margin:0}
-.toc a{display:block;font-size:.8rem;color:var(--faint);text-decoration:none;padding:.28rem 0 .28rem .95rem;line-height:1.4;transition:color .15s}
-.toc a:hover{color:var(--text)}
-.toc a.active{color:var(--text)}
-/* sliding indicator */
-.toc-ind{position:absolute;left:0;top:0;width:2px;height:0;margin:0;padding:0;list-style:none;background:var(--text);border-radius:1px;transition:transform .25s cubic-bezier(.4,0,.2,1),height .25s cubic-bezier(.4,0,.2,1);transform:translateY(0);will-change:transform,height}
-/* mobile: back to a regular block above the content */
-@media(max-width:1100px){.toc{position:static;width:auto;max-height:none;overflow:visible;background:var(--code-bg);border:1px solid var(--border);border-radius:12px;padding:.9rem 1.2rem;margin:0 0 1.5rem}.toc ul::before{display:none}.toc a{padding:.2rem 0}.toc-ind{display:none}}
+.prose h1,.prose h2,.prose h3{scroll-margin-top:1.25rem}
+/* dynamic-island table of contents (fixed to the bottom of the viewport) */
+.island{position:fixed;left:50%;bottom:1.1rem;transform:translateX(-50%);z-index:120;pointer-events:none}
+.island-inner{pointer-events:auto;display:flex;flex-direction:column-reverse;width:210px;background:#08080a;border-radius:999px;box-shadow:0 10px 40px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.07);transition:width .42s cubic-bezier(.3,.7,.3,1),border-radius .45s cubic-bezier(.3,.7,.3,1),box-shadow .3s}
+.island.open .island-inner{width:min(88vw,340px);border-radius:16px;box-shadow:0 18px 55px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,255,255,.1)}
+.island-head{display:flex;align-items:center;gap:.6rem;width:100%;padding:.5rem 1rem .55rem;background:none;border:0;color:#f5f5f6;font:inherit;font-size:.82rem;font-weight:500;letter-spacing:-.01em;cursor:pointer;text-align:left}
+.island-current{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.island-ring{position:relative;flex:0 0 22px;width:22px;height:22px}
+.island-ring svg{display:block;width:22px;height:22px;transform:rotate(-90deg)}
+.island-ring circle{fill:none;stroke-width:2.5}
+.island-ring .ring-bg{stroke:rgba(255,255,255,.15)}
+.island-ring .ring-fg{stroke:#f5f5f6;stroke-linecap:round;stroke-dasharray:53.41;stroke-dashoffset:53.41;transition:stroke-dashoffset .15s linear}
+.island-chev{flex:0 0 12px;color:#8b8b93;transition:transform .4s cubic-bezier(.3,.7,.3,1),color .2s}
+.island-head:hover .island-chev{color:#f5f5f6}
+.island.open .island-chev{transform:rotate(180deg)}
+.island-menu{list-style:none;margin:0;padding:0;max-height:0;opacity:0;overflow:hidden;transition:max-height .45s cubic-bezier(.3,.7,.3,1),opacity .25s ease,padding .35s ease}
+.island.open .island-menu{max-height:min(58vh,420px);opacity:1;overflow-y:auto;padding:1rem .7rem .7rem}
+.island-menu a{display:block;color:#9a9aa2;text-decoration:none;font-size:.82rem;line-height:1.35;padding:.5rem .7rem;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .15s,color .15s}
+.island-menu a:hover{background:rgba(255,255,255,.08);color:#f5f5f6}
+.island-menu a.active{background:rgba(255,255,255,.1);color:#f5f5f6}
 /* command palette */
 .cmdk-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);z-index:200;display:none}
 [data-theme="light"] .cmdk-backdrop{background:rgba(0,0,0,.2)}
@@ -130,8 +138,15 @@ html.traverse .prose{animation:vt-doc-back .4s cubic-bezier(.3,.7,.3,1) backward
 </div>
 <div class="wrap">
 {{ if .TOC }}
-<nav class="toc"><span class="toc-title">On this page</span>
-<ul><span class="toc-ind" id="toc-ind" aria-hidden="true"></span>{{ range .TOC }}<li><a href="#{{ .ID }}" data-cmd-section>{{ .Text }}</a></li>{{ end }}</ul>
+<nav class="island" id="island" aria-label="On this page">
+<div class="island-inner">
+<button class="island-head" id="island-toggle" aria-expanded="false" aria-controls="island-menu">
+<span class="island-ring" aria-hidden="true"><svg viewBox="0 0 22 22"><circle class="ring-bg" cx="11" cy="11" r="8.5"/><circle class="ring-fg" id="island-progress" cx="11" cy="11" r="8.5"/></svg></span>
+<span class="island-current" id="island-current">{{ (index .TOC 0).Text }}</span>
+<svg class="island-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+</button>
+<ul class="island-menu" id="island-menu">{{ range .TOC }}<li><a href="#{{ .ID }}" data-cmd-section>{{ .Text }}</a></li>{{ end }}</ul>
+</div>
 </nav>
 {{ end }}
 <main class="prose">
@@ -200,35 +215,41 @@ document.addEventListener('DOMContentLoaded', markNav);
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" data-autoloader-path="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/"></script>
 <script>
-// TOC scrollspy: measure the real link box and slide the left indicator there.
+// Dynamic-island table of contents: shows the active section, a circular
+// reading-progress ring, and expands into the full section list on click.
 (function(){
-  var toc = document.querySelector('.toc');
-  if (!toc) return;
-  var ind = document.getElementById('toc-ind');
-  var links = Array.prototype.slice.call(toc.querySelectorAll('a'));
-  if (!ind || !links.length) return;
+  var island = document.getElementById('island');
+  if (!island) return;
+  var head = document.getElementById('island-toggle');
+  var menu = document.getElementById('island-menu');
+  var label = document.getElementById('island-current');
+  var ring = document.getElementById('island-progress');
+  var links = Array.prototype.slice.call(menu.querySelectorAll('a'));
+  if (!links.length) return;
+  var headings = links.map(function(a){ return document.getElementById(a.getAttribute('href').slice(1)); });
+  var R = 8.5, C = 2 * Math.PI * R;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var headings = links.map(function(a){
-    return document.getElementById(a.getAttribute('href').slice(1));
-  });
-
-  function onMobile(){ return window.matchMedia('(max-width: 1100px)').matches; }
-
-  // Align the indicator with the *text* of a link, not its padded box.
-  function place(a){
-    if (!a || onMobile()) { ind.style.height = '0px'; return; }
-    var cs = getComputedStyle(a);
-    var padTop = parseFloat(cs.paddingTop) || 0;
-    var padBottom = parseFloat(cs.paddingBottom) || 0;
-    var lh = parseFloat(cs.lineHeight);
-    if (!lh || isNaN(lh)) lh = parseFloat(cs.fontSize) * 1.4;
-    var lines = Math.max(1, Math.round((a.clientHeight - padTop - padBottom) / lh));
-    var textH = lines * lh;
-
-    var top = a.offsetTop + padTop;
-    ind.style.height = Math.round(textH) + 'px';
-    ind.style.transform = 'translateY(' + Math.round(top) + 'px)';
+  function setOpen(open){
+    island.classList.toggle('open', open);
+    head.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
+  head.addEventListener('click', function(e){
+    e.stopPropagation();
+    setOpen(!island.classList.contains('open'));
+  });
+  document.addEventListener('click', function(e){ if (!island.contains(e.target)) setOpen(false); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') setOpen(false); });
+
+  links.forEach(function(a, i){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      var h = headings[i];
+      setOpen(false);
+      if (h) h.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      if (history.replaceState) history.replaceState(null, '', a.getAttribute('href'));
+    });
+  });
 
   var ticking = false;
   function onScroll(){
@@ -236,7 +257,11 @@ document.addEventListener('DOMContentLoaded', markNav);
     ticking = true;
     requestAnimationFrame(function(){
       ticking = false;
-      if (!headings.length) return;
+      // circular reading progress over the whole page
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+      ring.style.strokeDashoffset = (C * (1 - p)).toFixed(2);
+      // active section: last heading above the reading marker
       var marker = window.scrollY + Math.min(window.innerHeight * 0.32, 220);
       var best = 0, bestDist = -Infinity;
       for (var i = 0; i < headings.length; i++) {
@@ -245,8 +270,13 @@ document.addEventListener('DOMContentLoaded', markNav);
         var top = h.getBoundingClientRect().top + window.scrollY - marker;
         if (top <= 0 && top > bestDist) { bestDist = top; best = i; }
       }
-      for (var j = 0; j < links.length; j++) links[j].classList.toggle('active', j === best);
-      place(links[best]);
+      label.textContent = links[best].textContent;
+      for (var j = 0; j < links.length; j++) {
+        var active = j === best;
+        links[j].classList.toggle('active', active);
+        if (active) links[j].setAttribute('aria-current', 'true');
+        else links[j].removeAttribute('aria-current');
+      }
     });
   }
 
