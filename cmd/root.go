@@ -45,7 +45,7 @@ func runInit(args []string) {
 }
 
 func ShowHelp() {
-	fmt.Println(`
+	fmt.Print(`
 Kite — A lightweight static site generator
 
 USAGE:

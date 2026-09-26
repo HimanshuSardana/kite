@@ -63,4 +63,4 @@ Inline a `<style>` block (like this site's theme does) and there is nothing else
 kite build mytheme
 ```
 
-Ten themes ship with kite to steal ideas from: `modern-light`, `modern-dark`, `everforest`, `gruvbox`, `rose-pine`, `tufte` and more. Run `kite list-themes` to see them all.
+Eleven themes ship with kite to steal ideas from: `modern-light`, `modern-dark`, `everforest`, `gruvbox`, `rose-pine`, `tufte`, `notes` and more. Run `kite list-themes` to see them all. The `notes` theme adds a margin table of contents that collapses into a floating pill on small screens, a four-per-row home grid, and renders LaTeX math and TikZ diagrams.
