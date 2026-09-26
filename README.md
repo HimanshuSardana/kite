@@ -11,7 +11,7 @@ A fast, minimal static site generator written in Go. Transform Markdown files in
 
 ## Website
 
-Docs and landing page live at **https://himanshu.co/kite** — source in [`website/`](website/) (built with kite itself).
+Docs and landing page live at **https://kite.himanshu.co** — source in [`website/`](website/) (built with kite itself).
 
 ## Installation
 
