@@ -29,13 +29,8 @@ body{background:var(--bg);color:var(--muted);font-family:-apple-system,BlinkMacS
 .btn svg{flex-shrink:0}
 .icon-btn:hover{color:var(--text)}
 @media(max-width:640px){.topbar{justify-content:flex-start;overflow-x:auto}.topbar a.nl.hide-m{display:none}}
-/* logo */
-.logo-row{display:flex;align-items:center;gap:.8rem;margin:4.5rem 0 2.2rem}
-.logo-mark{width:42px;height:42px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-[data-theme="light"] .logo-mark{box-shadow:0 0 0 1px var(--border),0 4px 14px rgba(0,0,0,.08)}
-.logo-name{font-size:1.35rem;font-weight:600;color:var(--text);letter-spacing:-.01em}
 /* typewriter */
-.tagline-title{font-size:1.3rem;font-weight:600;color:var(--text);margin-bottom:1.2rem;letter-spacing:-.01em}
+.tagline-title{font-size:1.3rem;font-weight:600;color:var(--text);margin-top:4.5rem;margin-bottom:1.2rem;letter-spacing:-.01em}
 /* prose */
 .lede{margin-bottom:2rem}
 .lede a,.feat-list a,.faq a{color:var(--text);text-decoration:underline;text-decoration-color:var(--faint);text-underline-offset:3px}
@@ -132,11 +127,6 @@ html.traverse .prose{animation:vt-doc-back .4s cubic-bezier(.3,.7,.3,1) both}
 </div>
 
 <div class="wrap">
-<div class="logo-row rise">
-<div class="logo-mark"><svg width="26" height="26" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6 L36 19 L24 32 L12 19 Z" fill="#a3e635"/><path d="M24 6 L24 32 M12 19 L36 19" stroke="#4d7c0f" stroke-width="2"/><path d="M24 32 C 24 36, 21 37, 20 40" stroke="#4d7c0f" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M20 36 L23 38 L20 40 Z" fill="#4d7c0f"/></svg></div>
-<div class="logo-name">kite</div>
-</div>
-
 <h1 class="tagline-title rise rise-1">Markdown in, website out.</h1>
 
 <p class="lede rise rise-2">Free and open source static site generator written in <a href="https://go.dev" target="_blank" rel="noreferrer">Go</a> — themes, live reload and RSS, no bundler or lockfile. This page is <a href="https://github.com/HimanshuSardana/kite">kite</a> output.</p>
