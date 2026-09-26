@@ -185,7 +185,7 @@ func ListThemes(themesDir string) []string {
 }
 
 func ShowHelpMessage() {
-	fmt.Println(`
+	fmt.Print(`
 Kite — A lightweight static site generator
 
 USAGE:
