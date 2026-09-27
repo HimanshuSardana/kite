@@ -42,6 +42,7 @@ body{background:var(--bg);color:var(--body);font-family:var(--sans);font-size:16
 @media(max-width:600px){.notes-grid{grid-template-columns:1fr}}
 .note-card{position:relative;display:flex;flex-direction:column;gap:.65rem;min-height:200px;padding:1.15rem;background:var(--surface);border:1px solid var(--border);border-radius:16px;text-decoration:none;transition:border-color .18s ease}
 .note-card:hover{border-color:var(--muted)}
+.note-card[hidden]{display:none}
 .note-card .num{font-size:.72rem;color:var(--faint);counter-increment:note}
 .note-card .num::before{content:counter(note,decimal-leading-zero)}
 .note-card h3{font-family:var(--serif);font-weight:600;font-size:1.12rem;line-height:1.28;letter-spacing:-.01em;color:var(--text)}
