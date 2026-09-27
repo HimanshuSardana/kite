@@ -38,25 +38,25 @@ body{background:var(--bg);color:var(--body);font-family:var(--sans);font-size:16
 .icon-btn:hover{color:var(--text)}
 /* hero */
 .hero{padding:4.5rem 0 3rem;border-bottom:1px solid var(--border);margin-bottom:2.5rem}
-.hero .eyebrow{font-family:var(--mono);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:1rem}
+.hero .eyebrow{font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:1rem}
 .hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(2rem,5vw,3.1rem);line-height:1.08;letter-spacing:-.025em;color:var(--text);max-width:18ch}
 .hero .role{color:var(--muted);margin-top:1rem;font-size:.95rem}
 .hero .bio{color:var(--body);margin-top:.35rem;max-width:62ch}
 /* notes grid — four per row on wide screens */
 .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin-bottom:1.1rem}
 .section-head h2{font-family:var(--serif);font-weight:600;font-size:1.2rem;color:var(--text);letter-spacing:-.01em}
-.section-head span{font-size:.78rem;color:var(--faint);font-family:var(--mono)}
+.section-head span{font-size:.78rem;color:var(--faint)}
 .notes-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;counter-reset:note}
 @media(max-width:1080px){.notes-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.notes-grid{grid-template-columns:1fr}}
 .note-card{position:relative;display:flex;flex-direction:column;gap:.65rem;min-height:200px;padding:1.15rem;background:var(--surface);border:1px solid var(--border);border-radius:16px;text-decoration:none;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
 .note-card:hover{transform:translateY(-4px);border-color:var(--muted);box-shadow:0 12px 30px rgba(0,0,0,.18)}
-.note-card .num{font-family:var(--mono);font-size:.72rem;color:var(--faint);counter-increment:note}
+.note-card .num{font-size:.72rem;color:var(--faint);counter-increment:note}
 .note-card .num::before{content:counter(note,decimal-leading-zero)}
 .note-card h3{font-family:var(--serif);font-weight:600;font-size:1.12rem;line-height:1.28;letter-spacing:-.01em;color:var(--text)}
 .note-card .tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:auto}
 .tag{font-size:.68rem;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:.1rem .5rem;white-space:nowrap}
-.note-card .date{font-size:.74rem;color:var(--faint);font-family:var(--mono)}
+.note-card .date{font-size:.74rem;color:var(--faint)}
 .empty{color:var(--muted);padding:2rem 0}
 /* footer */
 footer{border-top:1px solid var(--border);margin-top:4rem;padding:1.8rem 0 3rem;font-size:.8rem;color:var(--faint)}
