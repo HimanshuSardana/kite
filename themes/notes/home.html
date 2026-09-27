@@ -56,6 +56,8 @@ body{background:var(--bg);color:var(--body);font-family:var(--sans);font-size:16
 .tag-pill.is-active{background:var(--text);border-color:var(--text);color:var(--bg)}
 .tag-pill .tag-count{opacity:.6;font-size:.72rem;margin-left:.35rem}
 .filter-count{margin-left:auto;font-size:.78rem;color:var(--faint);white-space:nowrap}
+/* snappier morph while the grid reflows (scoped so page navigations keep theirs) */
+html.filtering::view-transition-group(*){animation-duration:.4s;animation-timing-function:cubic-bezier(.32,.72,.24,1)}
 .empty{color:var(--muted);padding:2rem 0}
 /* footer */
 footer{border-top:1px solid var(--border);margin-top:4rem;padding:1.8rem 0 3rem;font-size:.8rem;color:var(--faint)}
@@ -155,6 +157,7 @@ window.addEventListener('pagereveal', function(e){
   if (!grid) return;
   var cards = Array.prototype.slice.call(grid.querySelectorAll('.note-card'));
   if (!cards.length) return;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function tagsOf(card){
     return Array.prototype.map.call(card.querySelectorAll('.tag'), function(el){
@@ -219,13 +222,33 @@ window.addEventListener('pagereveal', function(e){
       b.classList.toggle('is-active', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
-    var shown = 0;
-    cards.forEach(function(card){
-      var show = !tag || tagsOf(card).indexOf(tag) !== -1;
-      card.hidden = !show;
-      if (show) shown++;
-    });
-    renderCount(shown);
+
+    var update = function(){
+      var shown = 0;
+      cards.forEach(function(card){
+        var show = !tag || tagsOf(card).indexOf(tag) !== -1;
+        card.hidden = !show;
+        if (show) shown++;
+      });
+      renderCount(shown);
+    };
+
+    if (reduceMotion || !document.startViewTransition) { update(); return; }
+
+    // Stable per-card names so survivors morph to their new slots instead of
+    // fading (Framer-style layout animation via the native API). Transient, so
+    // navigations and the theme toggle are unaffected.
+    cards.forEach(function(card, i){ card.style.viewTransitionName = 'note-card-' + i; });
+    document.documentElement.classList.add('filtering');
+    var transition = null;
+    try { transition = document.startViewTransition(update); }
+    catch (e) { update(); }
+    var cleanup = function(){
+      cards.forEach(function(card){ card.style.viewTransitionName = ''; });
+      document.documentElement.classList.remove('filtering');
+    };
+    if (transition && transition.finished) transition.finished.then(cleanup, cleanup);
+    else cleanup();
   }
 
   apply('');
