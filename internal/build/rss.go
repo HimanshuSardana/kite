@@ -42,14 +42,8 @@ func GenerateRSS(outputDir, configPath, siteURL string, posts []content.PostSumm
 
 	for _, post := range posts {
 		dateStr := post.Date
-		var pubDate time.Time
-
-		if t, err := time.Parse("2006-01-02", post.Date); err == nil {
-			pubDate = t
-			dateStr = pubDate.Format(time.RFC1123)
-		} else if t, err := time.Parse("Jan 2006", post.Date); err == nil {
-			pubDate = t
-			dateStr = pubDate.Format(time.RFC1123)
+		if t := parsePostDate(post.Date); !t.IsZero() {
+			dateStr = t.Format(time.RFC1123)
 		}
 
 		feed.Items = append(feed.Items, RSSItem{

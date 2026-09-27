@@ -45,7 +45,7 @@ func runNew(args []string) {
 	title := titleFromSlug(strings.TrimSuffix(filepath.Base(path), ".md"))
 	post := "---\n" +
 		"title: " + title + "\n" +
-		"date: " + time.Now().Format("2006-01-02") + "\n" +
+		"date: " + time.Now().Format(time.RFC3339) + "\n" +
 		"tags: []\n"
 	if draft {
 		post += "draft: true\n"

@@ -40,9 +40,7 @@ func CollectTags(posts []content.PostSummary) []TagInfo {
 
 	tags := make([]TagInfo, 0, len(bySlug))
 	for _, t := range bySlug {
-		sort.Slice(t.Posts, func(i, j int) bool {
-			return t.Posts[i].Date > t.Posts[j].Date
-		})
+		sortPostSummaries(t.Posts)
 		tags = append(tags, *t)
 	}
 	sort.Slice(tags, func(i, j int) bool {
@@ -70,7 +68,7 @@ func RenderTagPages(themePath, outputDir string, tags []TagInfo) error {
 			list += fmt.Sprintf("  <li><a href=\"/%s/\">%s</a> — %s</li>\n",
 				template.HTMLEscapeString(p.Slug),
 				template.HTMLEscapeString(p.Title),
-				template.HTMLEscapeString(displayDate(p.Date)))
+				template.HTMLEscapeString(displayPostDate(p.Date)))
 		}
 		list += "</ul>\n"
 
@@ -105,13 +103,6 @@ func RenderTagPages(themePath, outputDir string, tags []TagInfo) error {
 
 	fmt.Printf("Tag pages written: %d tags\n", len(tags))
 	return nil
-}
-
-func displayDate(raw string) string {
-	if t, err := time.Parse("2006-01-02", raw); err == nil {
-		return t.Format("Jan 2006")
-	}
-	return raw
 }
 
 // tagSlugs returns tag slugs for sitemap inclusion.

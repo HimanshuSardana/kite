@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
-	"sort"
 	"time"
 
 	"github.com/HimanshuSardana/kite/pkg/config"
@@ -60,14 +59,10 @@ func LoadTemplate(themePath, templateFile string) (*template.Template, error) {
 }
 
 func RenderHomePage(themePath, outputDir, configPath string, summaries []content.PostSummary) error {
-	sort.Slice(summaries, func(i, j int) bool {
-		return summaries[i].Date > summaries[j].Date
-	})
+	sortPostSummaries(summaries)
 
 	for i, p := range summaries {
-		if t, err := time.Parse("2006-01-02", p.Date); err == nil {
-			summaries[i].Date = t.Format("Jan 2006")
-		}
+		summaries[i].Date = displayPostDate(p.Date)
 	}
 
 	cfg, err := config.Load(configPath)
