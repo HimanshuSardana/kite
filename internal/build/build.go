@@ -87,11 +87,17 @@ func Build(opts BuildOptions) error {
 			continue
 		}
 
+		rawDate := parsed.Frontmatter.Date
+		dateTime := ""
+		if t := parsePostDate(rawDate); !t.IsZero() {
+			dateTime = t.Format(time.RFC3339)
+		}
 		summaries = append(summaries, content.PostSummary{
-			Title: parsed.Frontmatter.Title,
-			Slug:  file.Slug,
-			Date:  parsed.Frontmatter.Date,
-			Tags:  parsed.Frontmatter.Tags,
+			Title:    parsed.Frontmatter.Title,
+			Slug:     file.Slug,
+			Date:     rawDate,
+			DateTime: dateTime,
+			Tags:     parsed.Frontmatter.Tags,
 		})
 
 		outputPath, err := content.GetOutputPath(opts.ContentDir, file.Path, opts.OutputDir)
