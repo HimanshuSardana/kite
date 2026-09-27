@@ -76,6 +76,12 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # gh release create resolves the target repo from the git remote,
+      # so this job needs a checkout too (download-artifact alone leaves
+      # no .git behind).
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
