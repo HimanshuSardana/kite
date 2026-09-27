@@ -8,65 +8,53 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link href="https://cdn.jsdelivr.net/npm/@fontsource/iosevka@latest/400.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/@fontsource/iosevka@latest/500.css" rel="stylesheet" />
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23111110'/%3E%3Cpath d='M14 12h13a6 6 0 0 1 0 12H14z' fill='%23e0a458'/%3E%3Cpath d='M14 24h15a6 6 0 0 1 0 12H14z' fill='none' stroke='%23e0a458' stroke-width='2.4'/%3E%3C/svg%3E" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%23111110'/%3E%3Cpath d='M14 12h13a6 6 0 0 1 0 12H14z' fill='%23e5e5e5'/%3E%3Cpath d='M14 24h15a6 6 0 0 1 0 12H14z' fill='none' stroke='%23e5e5e5' stroke-width='2.4'/%3E%3C/svg%3E" />
 <style>
 :root{
-  --bg:#111110;--surface:#171715;--text:#f1efe8;--body:#cfccc3;--muted:#a3a099;--faint:#6f6d66;
-  --border:#26251f;--accent:#e0a458;--accent-soft:rgba(224,164,88,.14);--code-bg:#171714;
+  --bg:#101010;--surface:#171717;--text:#ededed;--body:#c9c9c9;--muted:#9c9c9c;--faint:#6b6b6b;
+  --border:#262626;--code-bg:#161616;--selection:rgba(237,237,237,.16);
   --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
   --sans:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif;
   --mono:"Iosevka",ui-monospace,SFMono-Regular,Menlo,monospace;
 }
 [data-theme="light"]{
-  --bg:#fbfaf7;--surface:#fff;--text:#1b1a17;--body:#3a3833;--muted:#565349;--faint:#a3a099;
-  --border:#e8e5dd;--accent:#b45309;--accent-soft:rgba(180,83,9,.10);--code-bg:#f4f2ec;
+  --bg:#fafafa;--surface:#fff;--text:#171717;--body:#3a3a3a;--muted:#565656;--faint:#9a9a9a;
+  --border:#e6e6e6;--code-bg:#f2f2f2;--selection:rgba(0,0,0,.10);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--body);font-family:var(--sans);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;transition:background .2s}
-::selection{background:var(--accent-soft)}
+::selection{background:var(--selection)}
 .page{max-width:1100px;margin:0 auto;padding:0 1.5rem}
 /* top bar */
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:1.4rem;padding:1rem 1.5rem;max-width:1100px;margin:0 auto;font-size:.85rem}
 .brand{font-family:var(--serif);font-size:1.08rem;font-weight:600;color:var(--text);text-decoration:none;letter-spacing:-.01em}
-.brand:hover{color:var(--accent)}
+.brand:hover{color:var(--text)}
 .top-actions{display:flex;align-items:center;gap:1rem}
 .top-actions a{color:var(--muted);text-decoration:none}
 .top-actions a:hover{color:var(--text)}
 .icon-btn{background:none;border:none;cursor:pointer;color:var(--muted);padding:.25rem;display:flex;align-items:center}
 .icon-btn svg{display:block}
 .icon-btn:hover{color:var(--text)}
-/* hero */
-.hero{padding:4.5rem 0 3rem;border-bottom:1px solid var(--border);margin-bottom:2.5rem}
-.hero .eyebrow{font-family:var(--mono);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem}
-.hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(2rem,5vw,3.1rem);line-height:1.08;letter-spacing:-.025em;color:var(--text);max-width:18ch}
-.hero .role{color:var(--muted);margin-top:1rem;font-size:.95rem}
-.hero .bio{color:var(--body);margin-top:.35rem;max-width:62ch}
-/* notes grid — four per row on wide screens */
-.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin-bottom:1.1rem}
-.section-head h2{font-family:var(--serif);font-weight:600;font-size:1.2rem;color:var(--text);letter-spacing:-.01em}
-.section-head span{font-size:.78rem;color:var(--faint);font-family:var(--mono)}
-.notes-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;counter-reset:note}
-@media(max-width:1080px){.notes-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* notes grid — three per row on wide screens */
+.notes-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;counter-reset:note;margin-top:2rem}
+@media(max-width:940px){.notes-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.notes-grid{grid-template-columns:1fr}}
-.note-card{position:relative;display:flex;flex-direction:column;gap:.65rem;min-height:200px;padding:1.15rem;background:var(--surface);border:1px solid var(--border);border-radius:16px;text-decoration:none;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
-.note-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 30px rgba(0,0,0,.18)}
-.note-card .num{font-family:var(--mono);font-size:.72rem;color:var(--faint);counter-increment:note}
+.note-card{position:relative;display:flex;flex-direction:column;gap:.65rem;min-height:200px;padding:1.15rem;background:var(--surface);border:1px solid var(--border);border-radius:16px;text-decoration:none;transition:border-color .18s ease}
+.note-card:hover{border-color:var(--muted)}
+.note-card .num{font-size:.72rem;color:var(--faint);counter-increment:note}
 .note-card .num::before{content:counter(note,decimal-leading-zero)}
 .note-card h3{font-family:var(--serif);font-weight:600;font-size:1.12rem;line-height:1.28;letter-spacing:-.01em;color:var(--text)}
 .note-card .tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:auto}
 .tag{font-size:.68rem;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:.1rem .5rem;white-space:nowrap}
-.note-card .date{font-size:.74rem;color:var(--faint);font-family:var(--mono)}
+.note-card .date{font-size:.74rem;color:var(--faint)}
 .empty{color:var(--muted);padding:2rem 0}
 /* footer */
 footer{border-top:1px solid var(--border);margin-top:4rem;padding:1.8rem 0 3rem;font-size:.8rem;color:var(--faint)}
 footer .page{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
 footer a{color:var(--muted);text-decoration:none}
-footer a:hover{color:var(--accent)}
-/* entrance + view transitions */
-.rise{animation:vt-rise .6s cubic-bezier(.2,.7,.2,1) both}
-.rise-1{animation-delay:.05s}.rise-2{animation-delay:.12s}.rise-3{animation-delay:.19s}
-@keyframes vt-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+footer a:hover{color:var(--text)}
+/* view transitions */
 @view-transition{navigation:auto}
 ::view-transition-old(root){animation:vt-fade-out .28s ease both}
 ::view-transition-new(root){animation:vt-fade-in .28s ease both}
@@ -77,7 +65,6 @@ html[data-vt-nav="traverse"]::view-transition-old(root){animation:vt-back-out .3
 html[data-vt="theme"]::view-transition-old(root),html[data-vt="theme"]::view-transition-new(root){animation:none;mix-blend-mode:normal}
 html[data-vt="theme"]::view-transition-new(root){z-index:2;clip-path:circle(0 at var(--vt-x) var(--vt-y));animation:vt-circle .6s cubic-bezier(.3,.7,.3,1) forwards}
 @keyframes vt-circle{to{clip-path:circle(var(--vt-r) at var(--vt-x) var(--vt-y))}}
-html.from-vt .rise{animation:none}
 @media (prefers-reduced-motion:reduce){@view-transition{navigation:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}html{scroll-behavior:auto}}
 </style>
 </head>
@@ -91,14 +78,6 @@ html.from-vt .rise{animation:none}
 </div>
 
 <div class="page">
-<header class="hero">
-<p class="eyebrow rise rise-1">Notes</p>
-<h1 class="rise rise-2">{{ .SiteTitle }}</h1>
-{{ if .AuthorName }}<p class="role rise rise-3">{{ .AuthorName }}{{ if .AuthorRole }} · {{ .AuthorRole }}{{ end }}</p>{{ end }}
-{{ if .AuthorBio }}<p class="bio rise rise-3">{{ .AuthorBio }}</p>{{ end }}
-</header>
-
-<div class="section-head"><h2>All notes</h2><span>{{ len .Posts }} total</span></div>
 {{ if .Posts }}
 <div class="notes-grid">
 {{ range $p := .Posts }}
