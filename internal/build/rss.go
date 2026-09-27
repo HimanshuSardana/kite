@@ -42,7 +42,11 @@ func GenerateRSS(outputDir, configPath, siteURL string, posts []content.PostSumm
 
 	for _, post := range posts {
 		dateStr := post.Date
-		if t := parsePostDate(post.Date); !t.IsZero() {
+		raw := post.DateTime
+		if raw == "" {
+			raw = post.Date
+		}
+		if t := parsePostDate(raw); !t.IsZero() {
 			dateStr = t.Format(time.RFC1123)
 		}
 

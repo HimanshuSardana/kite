@@ -21,7 +21,11 @@ func GenerateSitemap(outputDir, siteURL string, posts []content.PostSummary, tag
 
 	for _, post := range posts {
 		lastmod := today
-		if t := parsePostDate(post.Date); !t.IsZero() {
+		raw := post.DateTime
+		if raw == "" {
+			raw = post.Date
+		}
+		if t := parsePostDate(raw); !t.IsZero() {
 			lastmod = t.Format("2006-01-02")
 		}
 		s += `  <url><loc>` + escapeXML(siteURL) + `/` + escapeXML(post.Slug) +
