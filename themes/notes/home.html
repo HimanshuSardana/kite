@@ -96,7 +96,7 @@ html[data-vt="theme"]::view-transition-new(root){z-index:2;clip-path:circle(0 at
 <span class="num"></span>
 <h3>{{ $p.Title }}</h3>
 {{ if $p.Tags }}<div class="tags">{{ range $p.Tags }}<span class="tag">{{ . }}</span>{{ end }}</div>{{ end }}
-<span class="date">{{ $p.Date }}</span>
+<time class="date"{{ if $p.DateTime }} datetime="{{ $p.DateTime }}"{{ end }}>{{ $p.Date }}</time>
 </a>
 {{ end }}
 </div>
@@ -253,6 +253,51 @@ window.addEventListener('pagereveal', function(e){
   }
 
   apply('');
+})();
+</script>
+<script>
+// live relative timestamps: cards render <time datetime="..."> with the
+// build-time string inside; this recomputes it from the viewer's clock on
+// load and every minute, so "37 minutes ago" never goes stale.
+(function(){
+  function ago(ts, now){
+    var d = now - ts;
+    if (d < 0) d = 0;
+    var minute = 60 * 1000, hour = 60 * minute, day = 24 * hour,
+        week = 7 * day, month = 30 * day;
+    if (d < minute) return 'just now';
+    if (d < hour) {
+      var m = Math.floor(d / minute);
+      return (m <= 1 ? '1 minute' : m + ' minutes') + ' ago';
+    }
+    if (d < day) {
+      var h = Math.floor(d / hour);
+      return (h === 1 ? '1 hour' : h + ' hours') + ' ago';
+    }
+    if (d < week) {
+      var n = Math.floor(d / day);
+      return (n === 1 ? '1 day' : n + ' days') + ' ago';
+    }
+    if (d < month) {
+      var w = Math.floor(d / week);
+      return (w <= 1 ? '1 week' : w + ' weeks') + ' ago';
+    }
+    return null;
+  }
+  function refresh(){
+    var now = Date.now();
+    Array.prototype.forEach.call(
+      document.querySelectorAll('time.date[datetime]'),
+      function(el){
+        var ts = Date.parse(el.getAttribute('datetime'));
+        if (isNaN(ts)) return;
+        var s = ago(ts, now);
+        if (s) el.textContent = s;
+      }
+    );
+  }
+  refresh();
+  setInterval(refresh, 60000);
 })();
 </script>
 </body>
