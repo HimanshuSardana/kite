@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>My Blog</title>
+    <link>https://example.com</link>
+    <description>Test bio</description>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 27 Sep 2026 01:15:13 IST</lastBuildDate>
+    <atom:link href="https://example.com/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Kite Devlog Adding Live Reload</title>
+      <link>https://example.com/2/</link>
+      <guid>https://example.com/2/</guid>
+      <pubDate>26/3/26</pubDate>
+      <description>Read more at https://example.com/2/</description>
+    </item>
+    <item>
+      <title>Writing a static site generator for fun and profit</title>
+      <link>https://example.com/1/</link>
+      <guid>https://example.com/1/</guid>
+      <pubDate>24/3/26</pubDate>
+      <description>Read more at https://example.com/1/</description>
+    </item>
+    <item>
+      <title>LaTeX that renders itself: math and diagrams</title>
+      <link>https://example.com/latex-showcase/</link>
+      <guid>https://example.com/latex-showcase/</guid>
+      <pubDate>Tue, 01 Sep 2026 00:00:00 UTC</pubDate>
+      <description>Read more at https://example.com/latex-showcase/</description>
+    </item>
+    <item>
+      <title>Markdown Kitchen Sink</title>
+      <link>https://example.com/markdown-kitchen-sink/</link>
+      <guid>https://example.com/markdown-kitchen-sink/</guid>
+      <pubDate>Tue, 01 Sep 2026 00:00:00 UTC</pubDate>
+      <description>Read more at https://example.com/markdown-kitchen-sink/</description>
+    </item>
+  </channel>
+</rss>

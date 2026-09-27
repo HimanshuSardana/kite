@@ -1,0 +1,105 @@
+name: Release
+
+# Cut a release by pushing a tag:  git tag v0.1.0 && git push origin v0.1.0
+# Each tag builds version-stamped binaries and publishes them as a GitHub
+# release — `kite update` downloads these assets.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build version-stamped binary
+        shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          set -euo pipefail
+          VERSION="${{ github.ref_name }}"
+          COMMIT="${GITHUB_SHA::7}"
+          DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          LDFLAGS="-s -w -X github.com/HimanshuSardana/kite/internal/version.Version=$VERSION -X github.com/HimanshuSardana/kite/internal/version.Commit=$COMMIT -X github.com/HimanshuSardana/kite/internal/version.Date=$DATE"
+          mkdir -p dist
+          ASSET="kite-${{ matrix.goos }}-${{ matrix.goarch }}"
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            go build -ldflags "$LDFLAGS" -o "$ASSET.exe" .
+            mv "$ASSET.exe" dist/
+          else
+            go build -ldflags "$LDFLAGS" -o kite .
+            tar czf "dist/$ASSET.tar.gz" kite
+            rm kite
+          fi
+          ls -la dist/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bins-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # gh release create resolves the target repo from the git remote,
+      # so this job needs a checkout too (download-artifact alone leaves
+      # no .git behind).
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: bins-*
+          merge-multiple: true
+          path: dist/
+
+      - name: Checksums
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum ./* > checksums.txt
+          cat checksums.txt
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" dist/* \
+            --title "${{ github.ref_name }}" \
+            --generate-notes

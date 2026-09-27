@@ -208,15 +208,20 @@ COMMANDS:
   list-themes   List all available themes
   new           Create a new post with frontmatter
   check         Check built site for broken internal links
+  version       Show the kite version
+  update        Update kite to the latest GitHub release
 
 OPTIONS:
   -h, --help    Show this help message
+  -v, --version Show the kite version
 
 EXAMPLES:
   kite build
   kite serve
   kite serve --port 8080
   kite list-themes
+  kite version
+  kite update
 
 DESCRIPTION:
   Kite converts your content into a static website using themes and templates.

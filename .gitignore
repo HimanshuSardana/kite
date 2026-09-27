@@ -1,3 +1,4 @@
 # Locally built binaries
 /kite
 /kite-release
+/dist/
