@@ -3,7 +3,7 @@
 A fast, minimal static site generator written in Go. Transform Markdown files into beautiful, themed websites with zero dependencies at runtime.
 
 <p>
-  <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/github/v/release/HimanshuSardana/kite" alt="Latest release">
   <img src="https://img.shields.io/badge/Go-1.25+-00ADD8.svg" alt="Go Version">
 </p>
 
@@ -18,6 +18,18 @@ Docs and landing page live at **https://kite.himanshu.co** — source in [`websi
 ```bash
 go install github.com/HimanshuSardana/kite@latest
 ```
+
+## Updating
+
+```bash
+kite update         # download and install the latest release binary
+kite update --check # just check whether an update is available
+kite -v             # show the installed version
+```
+
+Releases are cut from `v*` git tags — pushing a tag builds version-stamped
+binaries for Linux, macOS and Windows and publishes them on GitHub, which is
+what `kite update` downloads (and checksum-verifies).
 
 ## Usage
 
@@ -81,6 +93,8 @@ autodiscovery `<link>` to each page — no theme changes needed.
 | `kite serve --port 8080` | Serve on custom port |
 | `kite list-themes` | Show available themes |
 | `kite check` | Check `output/` for broken internal links (exit 1 if any) |
+| `kite version` / `kite -v` | Show the installed version |
+| `kite update` | Self-update to the latest GitHub release (`--check` to dry-run, `--force` to reinstall) |
 
 ## Configuration
 

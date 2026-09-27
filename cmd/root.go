@@ -20,6 +20,10 @@ func Execute() {
 	}
 
 	switch args[1] {
+	case "-v", "--version", "version":
+		runVersion(args)
+	case "update":
+		runUpdate(args)
 	case "build":
 		runBuild(args)
 	case "serve":
@@ -58,9 +62,12 @@ COMMANDS:
   init          Initialize a new blog project
   new           Create a new post with frontmatter
   check         Check built site for broken internal links
+  version       Show the kite version
+  update        Update kite to the latest GitHub release
 
 OPTIONS:
   -h, --help    Show this help message
+  -v, --version Show the kite version
 
 EXAMPLES:
   kite build
@@ -70,6 +77,8 @@ EXAMPLES:
   kite init
   kite new hello-world.md
   kite check
+  kite version
+  kite update
 
 DESCRIPTION:
   Kite converts your content into a static website using themes and templates.
