@@ -62,6 +62,7 @@ func ParseMarkdown(path string) (*ParsedPage, error) {
 	})
 
 	output := markdown.Render(doc, renderer)
+	output = RenderCallouts(output)
 
 	return &ParsedPage{
 		Frontmatter: matter,
