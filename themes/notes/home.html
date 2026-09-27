@@ -48,6 +48,14 @@ body{background:var(--bg);color:var(--body);font-family:var(--sans);font-size:16
 .note-card .tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:auto}
 .tag{font-size:.68rem;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:.1rem .5rem;white-space:nowrap}
 .note-card .date{font-size:.74rem;color:var(--faint)}
+/* tag filter pills */
+.tag-filter-row{display:flex;align-items:center;gap:1rem;margin:2rem 0 1.25rem;flex-wrap:wrap}
+.tag-filter{display:flex;flex-wrap:wrap;gap:.5rem}
+.tag-pill{font:inherit;font-size:.8rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:.32rem .8rem;cursor:pointer;transition:background .18s ease,color .18s ease,border-color .18s ease}
+.tag-pill:hover{color:var(--text);border-color:var(--muted)}
+.tag-pill.is-active{background:var(--text);border-color:var(--text);color:var(--bg)}
+.tag-pill .tag-count{opacity:.6;font-size:.72rem;margin-left:.35rem}
+.filter-count{margin-left:auto;font-size:.78rem;color:var(--faint);white-space:nowrap}
 .empty{color:var(--muted);padding:2rem 0}
 /* footer */
 footer{border-top:1px solid var(--border);margin-top:4rem;padding:1.8rem 0 3rem;font-size:.8rem;color:var(--faint)}
@@ -79,7 +87,7 @@ html[data-vt="theme"]::view-transition-new(root){z-index:2;clip-path:circle(0 at
 
 <div class="page">
 {{ if .Posts }}
-<div class="notes-grid">
+<div class="notes-grid" id="notes-grid">
 {{ range $p := .Posts }}
 <a class="note-card" href="{{ $p.Slug }}/">
 <span class="num"></span>
@@ -138,6 +146,90 @@ window.addEventListener('pageswap', function(e){
 window.addEventListener('pagereveal', function(e){
   if (e.viewTransition) document.documentElement.classList.add('from-vt');
 });
+</script>
+<script>
+// tag filter: builds pill buttons from the tags rendered on the cards,
+// then shows only matching cards. No-JS leaves every card visible.
+(function(){
+  var grid = document.getElementById('notes-grid');
+  if (!grid) return;
+  var cards = Array.prototype.slice.call(grid.querySelectorAll('.note-card'));
+  if (!cards.length) return;
+
+  function tagsOf(card){
+    return Array.prototype.map.call(card.querySelectorAll('.tag'), function(el){
+      return el.textContent.trim();
+    }).filter(Boolean);
+  }
+
+  var counts = Object.create(null);
+  var order = [];
+  cards.forEach(function(card){
+    tagsOf(card).forEach(function(t){
+      if (!(t in counts)) { counts[t] = 0; order.push(t); }
+      counts[t]++;
+    });
+  });
+  if (!order.length) return;
+  order.sort(function(a, b){ return a.localeCompare(b); });
+
+  var row = document.createElement('div');
+  row.className = 'tag-filter-row';
+  var group = document.createElement('div');
+  group.className = 'tag-filter';
+  group.setAttribute('role', 'group');
+  group.setAttribute('aria-label', 'Filter notes by tag');
+  var count = document.createElement('span');
+  count.className = 'filter-count';
+  row.appendChild(group);
+  row.appendChild(count);
+  grid.parentNode.insertBefore(row, grid);
+
+  var buttons = [];
+  function pill(label, tag, n){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tag-pill';
+    b.dataset.tag = tag;
+    b.setAttribute('aria-pressed', 'false');
+    var name = document.createElement('span');
+    name.textContent = label;
+    var num = document.createElement('span');
+    num.className = 'tag-count';
+    num.textContent = n;
+    b.appendChild(name);
+    b.appendChild(num);
+    b.addEventListener('click', function(){ apply(tag); });
+    group.appendChild(b);
+    buttons.push(b);
+  }
+
+  pill('All', '', cards.length);
+  order.forEach(function(t){ pill(t, t, counts[t]); });
+
+  function renderCount(shown){
+    count.textContent = shown === cards.length
+      ? cards.length + (cards.length === 1 ? ' note' : ' notes')
+      : shown + ' of ' + cards.length + ' notes';
+  }
+
+  function apply(tag){
+    buttons.forEach(function(b){
+      var on = b.dataset.tag === tag;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    var shown = 0;
+    cards.forEach(function(card){
+      var show = !tag || tagsOf(card).indexOf(tag) !== -1;
+      card.hidden = !show;
+      if (show) shown++;
+    });
+    renderCount(shown);
+  }
+
+  apply('');
+})();
 </script>
 </body>
 </html>
