@@ -106,10 +106,11 @@ func Build(opts BuildOptions) error {
 		}
 
 		page := Page{
-			Title:   parsed.Frontmatter.Title,
-			Content: template.HTML(parsed.Content),
-			TOC:     parsed.TOC,
-			Year:    time.Now().Year(),
+			Title:       parsed.Frontmatter.Title,
+			Content:     template.HTML(parsed.Content),
+			TOC:         parsed.TOC,
+			Year:        time.Now().Year(),
+			ReadingTime: parsed.ReadingTime,
 		}
 		if cfg != nil {
 			page.SiteTitle = cfg.SiteTitle

@@ -24,6 +24,7 @@ type ParsedPage struct {
 	Frontmatter content.Frontmatter
 	Content     []byte
 	TOC         []TOCItem
+	ReadingTime int
 }
 
 func ParseMarkdown(path string) (*ParsedPage, error) {
@@ -64,11 +65,24 @@ func ParseMarkdown(path string) (*ParsedPage, error) {
 	output := markdown.Render(doc, renderer)
 	output = RenderCallouts(output)
 
+	words := len(strings.Fields(string(rest)))
+
 	return &ParsedPage{
 		Frontmatter: matter,
 		Content:     output,
 		TOC:         toc,
+		ReadingTime: ReadingTimeMinutes(words),
 	}, nil
+}
+
+// ReadingTimeMinutes estimates reading time at 200 words per minute,
+// with a one-minute floor.
+func ReadingTimeMinutes(words int) int {
+	m := (words + 199) / 200
+	if m < 1 {
+		m = 1
+	}
+	return m
 }
 
 func extractText(h *ast.Heading) string {
