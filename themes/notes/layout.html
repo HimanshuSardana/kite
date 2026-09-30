@@ -133,8 +133,13 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;padding:.1em 0}
    also throw off viewport-centred fixed elements like the pill TOC) */
 .prose mjx-container[jax="CHTML"]:not([display="true"]){display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:bottom}
 /* latex diagrams (TikZ) */
-.prose .tikz{margin:1.6em 0;display:flex;justify-content:center}
+.prose .tikz{margin:1.6em 0;min-height:120px;display:flex;align-items:center;justify-content:center}
 .prose .tikz svg{max-width:100%;height:auto}
+/* lazy-load placeholder: spinner + text until TikZJax swaps in the svg */
+.tikz-placeholder{display:flex;align-items:center;gap:.6rem;color:var(--faint);font-size:.82rem}
+.tikz-spinner{width:18px;height:18px;flex:0 0 auto;border-radius:50%;border:2px solid var(--border);border-top-color:var(--muted);animation:tikz-spin .9s linear infinite}
+@keyframes tikz-spin{to{transform:rotate(360deg)}}
+figure.tikz:not(.tikz-loading) .tikz-placeholder,figure.tikz.tikz-failed .tikz-spinner{display:none}
 html:not([data-theme="light"]) .prose .tikz svg{filter:invert(1) hue-rotate(180deg)}
 /* command palette */
 .palette-backdrop{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;padding:12vh 1rem 1rem}
@@ -371,27 +376,130 @@ window.addEventListener('pagereveal', function(e){
 })();
 </script>
 <script>
-// LaTeX diagrams: rewrite ```tikz fenced blocks into <script type="text/tikz">
-// elements for TikZJax, which renders them to SVG in the browser. This runs
-// before Prism and before tikzjax.js below, so the scripts already exist when
-// TikZJax scans the page on load.
+// LaTeX diagrams: rewrite ```tikz fenced blocks into placeholder figures with
+// a loading spinner. The TikZ source stays inert (text/plain) until the
+// figure scrolls near the viewport; only then is it handed to TikZJax (whose
+// on-load renderer is captured below), so heavy TeX compilation happens on
+// demand instead of on every page load. Runs before Prism and tikzjax.js.
 (function(){
-  var blocks = document.querySelectorAll('pre > code.language-tikz');
-  Array.prototype.forEach.call(blocks, function(code){
+  var figures = [];
+  Array.prototype.forEach.call(document.querySelectorAll('pre > code.language-tikz'), function(code){
     var pre = code.parentNode;
     var fig = document.createElement('figure');
-    fig.className = 'tikz';
-    var script = document.createElement('script');
-    script.type = 'text/tikz';
-    script.textContent = code.textContent;
-    fig.appendChild(script);
+    fig.className = 'tikz tikz-loading';
+    var ph = document.createElement('div');
+    ph.className = 'tikz-placeholder';
+    ph.setAttribute('aria-hidden', 'true');
+    var spin = document.createElement('span');
+    spin.className = 'tikz-spinner';
+    var label = document.createElement('span');
+    label.className = 'tikz-loading-text';
+    label.textContent = 'Rendering diagram\u2026';
+    ph.appendChild(spin);
+    ph.appendChild(label);
+    var src = document.createElement('script');
+    src.type = 'text/plain';
+    src.className = 'tikz-source';
+    src.textContent = code.textContent;
+    fig.appendChild(ph);
+    fig.appendChild(src);
     pre.parentNode.replaceChild(fig, pre);
+    figures.push(fig);
+    // give up gracefully if rendering never finishes
+    setTimeout(function(){
+      if (fig.classList.contains('tikz-loading') && !fig.querySelector('svg')) {
+        fig.classList.add('tikz-failed');
+        label.textContent = 'Diagram failed to load.';
+      }
+    }, 30000);
   });
+  if (!figures.length) return;
+
+  // success path: TikZJax swaps the script for an <svg>; drop the spinner
+  var done = new MutationObserver(function(muts){
+    muts.forEach(function(m){
+      Array.prototype.forEach.call(m.addedNodes, function(n){
+        if (n.tagName !== 'SVG' && !(n.querySelector && n.querySelector('svg'))) return;
+        var fig = n;
+        while (fig && !(fig.classList && fig.classList.contains('tikz'))) fig = fig.parentNode;
+        if (fig) fig.classList.remove('tikz-loading');
+      });
+    });
+  });
+  done.observe(document.body, { childList: true, subtree: true });
+
+  function failAll(){
+    figures.forEach(function(fig){
+      if (fig.classList.contains('tikz-loading') && !fig.querySelector('svg')) {
+        fig.classList.add('tikz-failed');
+        var label = fig.querySelector('.tikz-loading-text');
+        if (label) label.textContent = 'Diagram failed to load.';
+      }
+    });
+  }
+  // coalesce rapid intersections into one TikZJax pass (already-rendered
+  // figures have no script left, so repeat passes are no-ops for them)
+  var timer = null;
+  function requestRender(){
+    if (timer) return;
+    timer = setTimeout(function(){
+      timer = null;
+      var fn = window.__kiteTikzRender;
+      if (typeof fn !== 'function') { failAll(); return; }
+      if (!document.querySelector('figure.tikz script[type="text/tikz"]')) return;
+      try { fn(); } catch (e) { failAll(); }
+    }, 60);
+  }
+  function activate(fig){
+    var src = fig.querySelector('script.tikz-source');
+    if (src) {
+      var live = document.createElement('script');
+      live.type = 'text/tikz';
+      live.textContent = src.textContent;
+      src.parentNode.replaceChild(live, src);
+    }
+    requestRender();
+  }
+  // render everything now (used by headless captures; normal visits go
+  // through the observer below)
+  window.__kiteRenderAllTikZ = function(){
+    figures.forEach(function(fig){
+      var src = fig.querySelector('script.tikz-source');
+      if (src && !fig.querySelector('svg')) {
+        var live = document.createElement('script');
+        live.type = 'text/tikz';
+        live.textContent = src.textContent;
+        src.parentNode.replaceChild(live, src);
+      }
+    });
+    var fn = window.__kiteTikzRender;
+    if (typeof fn === 'function') { try { fn(); } catch (e) {} }
+  };
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting) { io.unobserve(en.target); activate(en.target); }
+      });
+    }, { rootMargin: '400px 0px' });
+    figures.forEach(function(fig){ io.observe(fig); });
+  } else {
+    window.__kiteRenderAllTikZ();
+  }
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" data-autoloader-path="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/"></script>
 <script src="https://tikzjax.com/v1/tikzjax.js"></script>
+<script>
+// Capture TikZJax's on-load renderer so diagrams render on demand (see the
+// transformer above). Withheld from window.onload, it fires only when the
+// lazy loader calls it with a figure's source present.
+window.__kiteTikzRender = null;
+try {
+  if (typeof window.onload === 'function') { window.__kiteTikzRender = window.onload; }
+} catch (e) {}
+window.onload = null;
+</script>
 <script>
 // command palette: Ctrl/Cmd+K. On the home page it searches notes; on a
 // post page it jumps to headings on the current post.
