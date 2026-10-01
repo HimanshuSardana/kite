@@ -58,6 +58,22 @@ body{background:var(--bg);color:var(--body);font-family:var(--sans);font-size:16
 .tag-pill.is-active{background:var(--text);border-color:var(--text);color:var(--bg)}
 .tag-pill .tag-count{opacity:.6;font-size:.72rem;margin-left:.35rem}
 .filter-count{margin-left:auto;font-size:.78rem;color:var(--faint);white-space:nowrap}
+/* tag filter - ranked, single horizontally-scrollable row */
+.tag-filter-row{display:flex;flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:.55rem;margin:2rem 0 1.25rem;width:100%;max-width:100%}
+.tag-filter-scroll{
+  display:flex;flex-wrap:nowrap;gap:.5rem;
+  width:100%;max-width:100%;min-width:0;
+  overflow-x:auto;overflow-y:hidden;
+  padding:.1rem .1rem .55rem;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+  -webkit-overflow-scrolling:touch;
+}
+.tag-filter-scroll::-webkit-scrollbar{height:6px}
+.tag-filter-scroll::-webkit-scrollbar-track{background:transparent}
+.tag-filter-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px}
+.tag-filter-scroll::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+.tag-filter-scroll .tag-pill{flex:0 0 auto}
+.filter-count{align-self:flex-end;font-size:.78rem;color:var(--faint);white-space:nowrap}
 /* command palette */
 .palette-backdrop{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;padding:12vh 1rem 1rem}
 .palette-backdrop.open{display:flex}
@@ -177,8 +193,9 @@ window.addEventListener('pagereveal', function(e){
 });
 </script>
 <script>
-// tag filter: builds pill buttons from the tags rendered on the cards,
-// then shows only matching cards. No-JS leaves every card visible.
+// ranked tag filter: a single horizontally-scrollable row of tags ordered by
+// how many notes use them (most-used first). Clicking a tag filters the cards.
+// No-JS leaves every card visible.
 (function(){
   var grid = document.getElementById('notes-grid');
   if (!grid) return;
@@ -201,41 +218,50 @@ window.addEventListener('pagereveal', function(e){
     });
   });
   if (!order.length) return;
-  order.sort(function(a, b){ return a.localeCompare(b); });
+  var ranked = order.slice().sort(function(a,b){
+    return (counts[b] - counts[a]) || a.localeCompare(b);
+  });
 
   var row = document.createElement('div');
   row.className = 'tag-filter-row';
-  var group = document.createElement('div');
-  group.className = 'tag-filter';
-  group.setAttribute('role', 'group');
-  group.setAttribute('aria-label', 'Filter notes by tag');
+  var scroll = document.createElement('div');
+  scroll.className = 'tag-filter-scroll';
+  scroll.setAttribute('role', 'group');
+  scroll.setAttribute('aria-label', 'Filter notes by tag');
   var count = document.createElement('span');
   count.className = 'filter-count';
-  row.appendChild(group);
+  row.appendChild(scroll);
   row.appendChild(count);
   grid.parentNode.insertBefore(row, grid);
 
-  var buttons = [];
-  function pill(label, tag, n){
+  var activeTag = '';
+
+  function makePill(tag, label, n){
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'tag-pill';
     b.dataset.tag = tag;
-    b.setAttribute('aria-pressed', 'false');
+    var on = tag === activeTag;
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (on) b.classList.add('is-active');
     var name = document.createElement('span');
     name.textContent = label;
-    var num = document.createElement('span');
-    num.className = 'tag-count';
-    num.textContent = n;
     b.appendChild(name);
-    b.appendChild(num);
-    b.addEventListener('click', function(){ apply(tag); });
-    group.appendChild(b);
-    buttons.push(b);
+    if (n != null) {
+      var num = document.createElement('span');
+      num.className = 'tag-count';
+      num.textContent = n;
+      b.appendChild(num);
+    }
+    b.addEventListener('click', function(){
+      apply(tag);
+      try { b.scrollIntoView({inline:'center', block:'nearest'}); } catch(e){}
+    });
+    return b;
   }
 
-  pill('All', '', cards.length);
-  order.forEach(function(t){ pill(t, t, counts[t]); });
+  scroll.appendChild(makePill('', 'All', cards.length));
+  ranked.forEach(function(t){ scroll.appendChild(makePill(t, t, counts[t])); });
 
   function renderCount(shown){
     count.textContent = shown === cards.length
@@ -244,41 +270,36 @@ window.addEventListener('pagereveal', function(e){
   }
 
   function apply(tag){
-    buttons.forEach(function(b){
-      var on = b.dataset.tag === tag;
-      b.classList.toggle('is-active', on);
-      b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    });
-
+    activeTag = tag || '';
     var update = function(){
+      Array.prototype.forEach.call(scroll.children, function(b){
+        var on = b.dataset.tag === activeTag;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
       var shown = 0;
       cards.forEach(function(card){
-        var show = !tag || tagsOf(card).indexOf(tag) !== -1;
+        var show = !activeTag || tagsOf(card).indexOf(activeTag) !== -1;
         card.hidden = !show;
         if (show) shown++;
       });
       renderCount(shown);
     };
-
     if (reduceMotion || !document.startViewTransition) { update(); return; }
-
-    // Stable per-card names so survivors morph to their new slots instead of
-    // fading (Framer-style layout animation via the native API). Transient, so
-    // navigations and the theme toggle are unaffected.
     cards.forEach(function(card, i){ card.style.viewTransitionName = 'note-card-' + i; });
     document.documentElement.classList.add('filtering');
-    var transition = null;
-    try { transition = document.startViewTransition(update); }
+    var t = null;
+    try { t = document.startViewTransition(update); }
     catch (e) { update(); }
     var cleanup = function(){
       cards.forEach(function(card){ card.style.viewTransitionName = ''; });
       document.documentElement.classList.remove('filtering');
     };
-    if (transition && transition.finished) transition.finished.then(cleanup, cleanup);
+    if (t && t.finished) t.finished.then(cleanup, cleanup);
     else cleanup();
   }
 
-  apply('');
+  renderCount(cards.length);
 })();
 </script>
 <script>
