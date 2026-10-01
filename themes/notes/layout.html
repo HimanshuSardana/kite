@@ -23,16 +23,16 @@
   --border:#e6e6e6;--code-bg:#f2f2f2;--selection:rgba(0,0,0,.10);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{overflow-x:clip}
+html{scroll-behavior:smooth;scrollbar-gutter:stable}
+body{overflow-x:clip;scrollbar-gutter:stable}
 body{background:var(--bg);color:var(--body);font-family:var(--sans);font-size:16.5px;line-height:1.75;-webkit-font-smoothing:antialiased;transition:background .2s}
 ::selection{background:var(--selection)}
 .wrap{max-width:720px;margin:0 auto;padding:0 1.25rem}
 /* top bar */
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:1.4rem;padding:.9rem 1.25rem;font-size:.85rem;max-width:1100px;margin:0 auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:1.4rem;padding:1rem 1.5rem;font-size:.85rem;line-height:1.4;max-width:1100px;margin:0 auto}
 .brand{font-family:var(--serif);font-size:1.08rem;font-weight:600;color:var(--text);text-decoration:none;letter-spacing:-.01em}
 .brand:hover{color:var(--text)}
-.top-actions{display:flex;align-items:center;gap:.7rem}
+.top-actions{display:flex;align-items:center;gap:1rem}
 .icon-btn{background:none;border:none;cursor:pointer;color:var(--muted);padding:.25rem;display:flex;align-items:center}
 .icon-btn svg{display:block}
 .icon-btn:hover{color:var(--text)}
@@ -94,7 +94,7 @@ code[class*=language-]{font-family:var(--mono)}
 .token.number,.token.boolean,.token.constant{color:var(--muted)}
 .token.operator,.token.punctuation{color:var(--faint)}
 /* sidebar table of contents (large screens) */
-.toc{position:fixed;top:7rem;left:max(1.25rem,calc(50vw - 360px - 200px));width:190px;margin:0;max-height:calc(100vh - 10rem);overflow-y:auto}
+.toc{position:fixed;top:7rem;left:max(1.25rem,calc(50% - 360px - 200px));width:190px;margin:0;max-height:calc(100vh - 10rem);overflow-y:auto}
 .toc-title{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:.8rem}
 .toc ul{list-style:none;margin:0;padding:0;position:relative}
 .toc ul::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--border)}
