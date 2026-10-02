@@ -64,6 +64,7 @@ func (m *InitModel) Init() tea.Cmd {
 		"terminal-gruvbox",
 		"tufte",
 		"notes",
+		"minimal-notes",
 	}
 
 	items := make([]list.Item, len(themes))

@@ -123,4 +123,5 @@ Kite comes with 11 built-in themes:
 - tufte
 - magical
 - notes — margin/floating table of contents, four-per-row home grid and LaTeX math + TikZ diagrams
+- minimal-notes — same post pages as notes, plain ruled-list home page
 
