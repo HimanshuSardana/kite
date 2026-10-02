@@ -172,6 +172,10 @@ html[data-vt-nav="traverse"]::view-transition-old(root){animation:vt-back-out .3
 html[data-vt="theme"]::view-transition-old(root),html[data-vt="theme"]::view-transition-new(root){animation:none;mix-blend-mode:normal}
 html[data-vt="theme"]::view-transition-new(root){z-index:2;clip-path:circle(0 at var(--vt-x) var(--vt-y));animation:vt-circle .6s cubic-bezier(.3,.7,.3,1) forwards}
 @keyframes vt-circle{to{clip-path:circle(var(--vt-r) at var(--vt-x) var(--vt-y))}}
+/* shared-element morph: the post <h1> and the home note title share a name */
+.vt-title{view-transition-name:post-title}
+::view-transition-group(post-title){animation-duration:.42s;animation-timing-function:cubic-bezier(.3,.7,.3,1)}
+::view-transition-old(post-title),::view-transition-new(post-title){animation-duration:.42s;animation-timing-function:cubic-bezier(.3,.7,.3,1)}
 .prose{animation:vt-doc-in .45s cubic-bezier(.2,.7,.2,1) backwards}
 html.from-vt .prose{animation:none}
 @keyframes vt-doc-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -224,7 +228,7 @@ window.MathJax = {
 <div class="wrap">
 <main class="prose">
 <a class="back" href="../"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>All notes</a>
-<h1>{{ .Title }}</h1>
+<h1 class="vt-title">{{ .Title }}</h1>
 {{ if .ReadingTime }}<p class="post-meta">{{ .ReadingTime }} min read</p>{{ end }}
 {{ .Content }}
 </main>
@@ -269,18 +273,30 @@ window.MathJax = {
       root.style.setProperty('--vt-y', Math.round(y) + 'px');
       root.style.setProperty('--vt-r', Math.ceil(r) + 'px');
       root.dataset.vt = 'theme';
+      // keep the title out of this same-document transition so it is not
+      // pulled into a separate un-clipped snapshot during the circular reveal
+      var titleEl = document.querySelector('main.prose h1.vt-title');
+      if (titleEl) titleEl.style.viewTransitionName = 'none';
       var t = document.startViewTransition(flip);
-      if (t && t.finished) t.finished.then(function(){ delete root.dataset.vt; }, function(){ delete root.dataset.vt; });
+      var done = function(){ delete root.dataset.vt; if (titleEl) titleEl.style.viewTransitionName = ''; };
+      if (t && t.finished) t.finished.then(done, done);
+      else setTimeout(done, 800);
     } else { flip(); }
   });
 })();
+// shared-element morph: the home note title flies into this post's <h1>.
+// The h1 carries the view-transition-name from the .vt-title class, so it is
+// named in the incoming snapshot without any JS here.
 window.addEventListener('pageswap', function(e){
   if (!e.viewTransition) return;
   var nav = (e.activation && e.activation.navigationType) || '';
   if (nav) document.documentElement.dataset.vtNav = nav;
 });
 window.addEventListener('pagereveal', function(e){
-  if (e.viewTransition) document.documentElement.classList.add('from-vt');
+  // pagereveal fires before the incoming snapshot; navigation.activation.from
+  // is set on a cross-document navigation (viewTransition can be null here).
+  if (e.viewTransition || (window.navigation && navigation.activation && navigation.activation.from))
+    document.documentElement.classList.add('from-vt');
 });
 </script>
 <script>
