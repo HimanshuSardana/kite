@@ -77,6 +77,9 @@ html[data-vt-nav="traverse"]::view-transition-old(root){animation:vt-back-out .3
 html[data-vt="theme"]::view-transition-old(root),html[data-vt="theme"]::view-transition-new(root){animation:none;mix-blend-mode:normal}
 html[data-vt="theme"]::view-transition-new(root){z-index:2;clip-path:circle(0 at var(--vt-x) var(--vt-y));animation:vt-circle .6s cubic-bezier(.3,.7,.3,1) forwards}
 @keyframes vt-circle{to{clip-path:circle(var(--vt-r) at var(--vt-x) var(--vt-y))}}
+/* shared-element morph: the note title and the post <h1> share a name */
+::view-transition-group(post-title){animation-duration:.42s;animation-timing-function:cubic-bezier(.3,.7,.3,1)}
+::view-transition-old(post-title),::view-transition-new(post-title){animation-duration:.42s;animation-timing-function:cubic-bezier(.3,.7,.3,1)}
 @media (prefers-reduced-motion:reduce){@view-transition{navigation:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}html{scroll-behavior:auto}}
 </style>
 </head>
@@ -144,18 +147,45 @@ html[data-vt="theme"]::view-transition-new(root){z-index:2;clip-path:circle(0 at
       root.style.setProperty('--vt-y', Math.round(y) + 'px');
       root.style.setProperty('--vt-r', Math.ceil(r) + 'px');
       root.dataset.vt = 'theme';
+      if (window.vtClearTitleRows) vtClearTitleRows();
       var t = document.startViewTransition(flip);
       if (t && t.finished) t.finished.then(function(){ delete root.dataset.vt; }, function(){ delete root.dataset.vt; });
     } else { flip(); }
   });
 })();
+// shared-element morph: the clicked note title flies to the post <h1>,
+// which is named via the .vt-title class on the post page. Here we name the
+// list row in the outgoing snapshot (pageswap) and, when returning to the
+// home page, the matching row in the incoming snapshot (pagereveal).
+function vtTitleRow(url){
+  vtClearTitleRows();
+  if (!url) return;
+  var target;
+  try { target = new URL(url, location.href).href; } catch(_) { return; }
+  var rows = document.querySelectorAll('a.note-row');
+  for (var i = 0; i < rows.length; i++) {
+    var h3 = rows[i].querySelector('h3');
+    if (!h3) continue;
+    var href = rows[i].href || new URL(rows[i].getAttribute('href'), location.href).href;
+    if (href === target) { h3.style.viewTransitionName = 'post-title'; return; }
+  }
+}
+function vtClearTitleRows(){
+  var rows = document.querySelectorAll('a.note-row h3');
+  for (var i = 0; i < rows.length; i++) rows[i].style.viewTransitionName = 'none';
+}
 window.addEventListener('pageswap', function(e){
   if (!e.viewTransition) return;
   var nav = (e.activation && e.activation.navigationType) || '';
   if (nav) document.documentElement.dataset.vtNav = nav;
+  if (e.activation && e.activation.entry) vtTitleRow(e.activation.entry.url);
 });
 window.addEventListener('pagereveal', function(e){
-  if (e.viewTransition) document.documentElement.classList.add('from-vt');
+  if (e.viewTransition || (window.navigation && navigation.activation && navigation.activation.from))
+    document.documentElement.classList.add('from-vt');
+  // returning from a post: morph its <h1> back into the matching row
+  vtTitleRow(document.referrer);
+  setTimeout(vtClearTitleRows, 800);
 });
 </script>
 <script>
