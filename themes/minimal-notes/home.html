@@ -43,6 +43,11 @@ body{background:var(--bg);color:var(--body);font-family:var(--sans);font-size:16
 .note-row .date{flex:0 0 5.5rem;font-size:.86rem;color:var(--faint);white-space:nowrap}
 .note-row h3{font-family:var(--sans);font-weight:400;font-size:.95rem;line-height:1.5;color:var(--text);text-decoration:underline;text-decoration-color:var(--faint);text-underline-offset:3px}
 .note-row:hover h3{text-decoration-color:var(--text)}
+/* scroll reveal: rows slide up and fade in as they enter the viewport.
+   hidden state applies only when JS adds .io, so no-JS stays visible. */
+.post-list.io .note-row{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.2,1)}
+.post-list.io .note-row.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.post-list.io .note-row{opacity:1;transform:none;transition:none}}
 /* no tag filter in minimal-notes — the list stays a plain reverse-chron run */
 /* command palette */
 .palette-backdrop{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;padding:12vh 1rem 1rem}
@@ -314,6 +319,36 @@ window.addEventListener('pagereveal', function(e){
     } else if (e.key === 'Escape' && backdrop.classList.contains('open')) {
       close();
     }
+  });
+})();
+</script>
+<script>
+// scroll reveal: slide + fade post rows in as they enter the viewport.
+// The .io class (added only when IO exists) keeps content visible without JS.
+(function(){
+  var grid = document.getElementById('notes-grid');
+  if (!grid || !('IntersectionObserver' in window)) return;
+  var rows = grid.querySelectorAll('.note-row');
+  if (!rows.length) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  grid.classList.add('io');
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (!en.isIntersecting) return;
+      var el = en.target;
+      io.unobserve(el);
+      var i = parseInt(el.getAttribute('data-io') || '0', 10);
+      el.style.transitionDelay = Math.min(i, 12) * 35 + 'ms';
+      requestAnimationFrame(function(){ el.classList.add('in'); });
+    });
+  }, {rootMargin: '0px 0px -8% 0px', threshold: 0.01});
+  Array.prototype.forEach.call(rows, function(el, i){
+    el.setAttribute('data-io', String(i % 24));
+    io.observe(el);
+  });
+  grid.addEventListener('transitionend', function(e){
+    var t = e.target;
+    if (t && t.classList && t.classList.contains('note-row')) t.style.transitionDelay = '';
   });
 })();
 </script>
