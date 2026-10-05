@@ -65,6 +65,7 @@ func (m *InitModel) Init() tea.Cmd {
 		"tufte",
 		"notes",
 		"minimal-notes",
+		"flectar",
 	}
 
 	items := make([]list.Item, len(themes))
