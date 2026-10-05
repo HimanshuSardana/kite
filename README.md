@@ -111,7 +111,7 @@ siteUrl: "https://your-domain.com"
 
 ## Themes
 
-Kite comes with 11 built-in themes:
+Kite comes with 13 built-in themes:
 - modern-light
 - modern-dark
 - modern-dark-2
@@ -124,4 +124,5 @@ Kite comes with 11 built-in themes:
 - magical
 - notes — margin/floating table of contents, four-per-row home grid and LaTeX math + TikZ diagrams
 - minimal-notes — same post pages as notes, slrncl-style dateline index home page
+- flectar — dark SaaS-landing style home (hero, featured-post window, archive strip, cards) with matching serif post pages
 
