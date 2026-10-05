@@ -147,7 +147,16 @@ html[data-vt="theme"]::view-transition-new(root){z-index:2;clip-path:circle(0 at
       var x = (e && e.clientX != null) ? e.clientX : window.innerWidth / 2;
       var y = (e && e.clientY != null) ? e.clientY : 0;
       var root = document.documentElement;
-      var r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+      // Radius must cover the whole snapshot from any origin. On mobile the
+      // snapshot can extend past window.innerHeight (dynamic URL bar), so use
+      // the larger of the visual/layout viewports and just take the diagonal.
+      var vw = Math.max(window.innerWidth || 0, root.clientWidth || 0);
+      var vh = Math.max(window.innerHeight || 0, root.clientHeight || 0);
+      if (window.visualViewport) {
+        vw = Math.max(vw, (window.visualViewport.width || 0) + (window.visualViewport.offsetLeft || 0));
+        vh = Math.max(vh, (window.visualViewport.height || 0) + (window.visualViewport.offsetTop || 0));
+      }
+      var r = Math.hypot(vw, vh) + 8;
       root.style.setProperty('--vt-x', Math.round(x) + 'px');
       root.style.setProperty('--vt-y', Math.round(y) + 'px');
       root.style.setProperty('--vt-r', Math.ceil(r) + 'px');
