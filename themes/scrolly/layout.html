@@ -126,7 +126,7 @@ window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [[
     var stage = root.querySelector('.scrolly-stage');
     var dots = Array.prototype.slice.call(root.querySelectorAll('.scrolly-dot'));
     var sections = Array.prototype.slice.call(root.querySelectorAll('.scrolly-step'));
-    var st = { pairA: -1, pairB: -1, deltas: {}, mode: '', single: -1, dotsOn: -1 };
+    var st = { pairA: -1, pairB: -1, mode: '', single: -1, dotsOn: -1, lineH: 28 };
     typeset(stage);
 
     // Scroll position -> float progress across section centers.
@@ -154,8 +154,6 @@ window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [[
     function buildPair(a, b){
       var A = steps[a], B = steps[b];
       clearTransforms();
-      var oldBoxes = {};
-      stage.querySelectorAll('.s-line').forEach(function(el){ oldBoxes[el.getAttribute('data-lid')] = el.getBoundingClientRect(); });
       if (A.lang !== 'tex' && B.lang !== 'tex') {
         var model = unionModel(A, B);
         var h = '<pre class="scrolly-code"><code>';
@@ -164,12 +162,7 @@ window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [[
           h += '<div class="s-line" data-lid="'+esc(m.line.id)+'" data-role="'+m.role+'"><span>'+esc(t)+'</span></div>';
         });
         stage.innerHTML = h + '</code></pre>';
-        var deltas = {};
-        stage.querySelectorAll('.s-line').forEach(function(el){
-          var lid = el.getAttribute('data-lid');
-          if (oldBoxes[lid]) deltas[lid] = oldBoxes[lid].top - el.getBoundingClientRect().top;
-        });
-        st.deltas = deltas; st.mode = 'morph';
+        st.mode = 'morph';
         var probe = stage.querySelector('.s-line');
         st.lineH = probe ? probe.offsetHeight : 28;
       } else {
@@ -212,8 +205,7 @@ window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [[
             el.style.height = Math.max(0, st.lineH * (1 - t)).toFixed(1) + 'px';
             el.style.transform = 'translateX(' + (-24 * t).toFixed(1) + 'px)';
           } else {
-            var d = st.deltas[lid] || 0;
-            el.style.transform = d ? 'translateY(' + (d * (1 - t)).toFixed(1) + 'px)' : '';
+            el.style.transform = '';
             var fa = focusOf(steps[a], lid) ? 1 : 0.28;
             var fb = focusOf(steps[b], lid) ? 1 : 0.28;
             el.style.opacity = lerp(fa, fb, t).toFixed(3);
