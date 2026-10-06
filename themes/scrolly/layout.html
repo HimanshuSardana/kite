@@ -34,14 +34,13 @@ body{background:var(--bg);color:var(--body);font-family:var(--serif);font-size:1
 .scrolly-stage{height:100%;width:100%;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .scrolly-stage pre.scrolly-code{margin:0;width:100%;max-width:900px;max-height:100%;overflow:auto;background:var(--code-bg);color:var(--code-text);font-family:var(--mono);font-size:15px;line-height:1.8;padding:2rem 1.5rem}
 .scrolly-stage pre code{display:block}
-.s-line{white-space:pre;overflow:hidden}
+.s-line{white-space:pre;transition:opacity .3s}
 .s-line.dim{opacity:.28}
 .s-line.enter{animation:s-in .35s cubic-bezier(.2,.7,.2,1) both}
 @keyframes s-in{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:none}}
 .scrolly-tex{color:var(--code-text);font-size:1.3rem;padding:1rem;overflow-x:auto;max-width:100%}
 .scrolly-tex.fade{animation:s-fade .35s ease both}
 @keyframes s-fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-.scrolly-xfade{display:grid;width:100%;max-width:900px;max-height:100%}.scrolly-xfade>.scrolly-layer{grid-area:1/1;display:flex;align-items:center;justify-content:center;min-height:0}.scrolly-xfade pre.scrolly-code{width:100%}
 .scrolly-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;gap:6px;justify-content:center}
 .scrolly-dot{width:22px;height:3px;border-radius:2px;background:rgba(255,255,255,.22)}
 .scrolly-dot.on{background:#fff}
@@ -75,43 +74,17 @@ window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [[
 </div>
 <script>
 (function(){
-  // Continuous scrub ("lerp") engine, pomb-style.
-  // progress is a float in [0, steps-1] derived from scroll position:
-  // p = 1.37 means 37% of the way from step 1 to step 2. Every visual is
-  // lerp(a, b, t) so the code tracks the scrollbar 1:1 and reversibly.
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function lerp(a, b, t){ return a + (b - a) * t; }
-  function singleHTML(st){
-    if (st.lang === 'tex') return '<div class="scrolly-tex">$$'+esc(st.tex)+'$$</div>';
+  function stepHTML(steps, n){
+    var st = steps[Math.max(0, Math.min(n, steps.length-1))];
+    if (st.lang === 'tex') return '<div class="scrolly-tex fade">$$'+esc(st.tex)+'$$</div>';
     var h = '<pre class="scrolly-code"><code>';
     st.lines.forEach(function(ln){
       var t = ln.text.trim() === '' ? ' ' : ln.text;
-      h += '<div class="s-line" data-lid="'+esc(ln.id)+'"><span>'+esc(t)+'</span></div>';
+      h += '<div class="s-line'+(ln.focus?'':' dim')+'" data-lid="'+esc(ln.id)+'"><span>'+esc(t)+'</span></div>';
     });
     return h + '</code></pre>';
-  }
-  // Union of two code steps in target order; lines that disappear are kept
-  // (tagged exit) so they fade/slide out with t instead of vanishing.
-  function unionModel(a, b){
-    var inB = {}, i, k;
-    for (i = 0; i < b.lines.length; i++) inB[b.lines[i].id] = true;
-    var inA = {};
-    for (i = 0; i < a.lines.length; i++) inA[a.lines[i].id] = true;
-    var out = [];
-    for (i = 0; i < b.lines.length; i++) {
-      out.push({ line: b.lines[i], role: inA[b.lines[i].id] ? 'kept' : 'enter' });
-    }
-    for (k = 0; k < a.lines.length; k++) {
-      if (!inB[a.lines[k].id]) {
-        out.splice(Math.min(k, out.length), 0, { line: a.lines[k], role: 'exit' });
-      }
-    }
-    return out;
-  }
-  function focusOf(st, id){
-    for (var i = 0; i < st.lines.length; i++) if (st.lines[i].id === id) return st.lines[i].focus;
-    return true;
   }
   function typeset(el){
     if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise([el]).catch(function(){}); }
@@ -121,137 +94,46 @@ window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [[
     if (!dataEl) return;
     var steps;
     try { steps = JSON.parse(dataEl.textContent); } catch(e){ return; }
-    if (!steps.length) return;
-    var last = steps.length - 1;
     var stage = root.querySelector('.scrolly-stage');
     var dots = Array.prototype.slice.call(root.querySelectorAll('.scrolly-dot'));
     var sections = Array.prototype.slice.call(root.querySelectorAll('.scrolly-step'));
-    var st = { pairA: -1, pairB: -1, mode: '', single: -1, dotsOn: -1, lineH: 28 };
+    var cur = 0, animating = false;
     typeset(stage);
-
-    // Scroll position -> float progress across section centers.
-    function progress(){
-      var vc = window.scrollY + window.innerHeight / 2;
-      var pts = sections.map(function(s){
-        var r = s.getBoundingClientRect();
-        return { step: parseInt(s.getAttribute('data-step'), 10) || 0, y: r.top + window.scrollY + r.height / 2 };
-      });
-      if (vc <= pts[0].y) return pts[0].step;
-      for (var k = 0; k < pts.length - 1; k++) {
-        if (vc <= pts[k+1].y) {
-          var span = pts[k+1].y - pts[k].y;
-          var f = span > 0 ? (vc - pts[k].y) / span : 1;
-          return pts[k].step + f * (pts[k+1].step - pts[k].step);
-        }
-      }
-      return pts[pts.length-1].step;
-    }
-
-    function clearTransforms(){
-      stage.querySelectorAll('.s-line').forEach(function(el){ el.style.transform = ''; el.style.opacity = ''; });
-    }
-
-    function buildPair(a, b){
-      var A = steps[a], B = steps[b];
-      clearTransforms();
-      if (A.lang !== 'tex' && B.lang !== 'tex') {
-        var model = unionModel(A, B);
-        var h = '<pre class="scrolly-code"><code>';
-        model.forEach(function(m){
-          var t = m.line.text.trim() === '' ? ' ' : m.line.text;
-          h += '<div class="s-line" data-lid="'+esc(m.line.id)+'" data-role="'+m.role+'"><span>'+esc(t)+'</span></div>';
+    function go(n){
+      n = Math.max(0, Math.min(n, steps.length-1));
+      if (n === cur || animating && n === cur) return;
+      // FLIP for code: capture old line boxes by lid
+      var oldBoxes = {};
+      stage.querySelectorAll('.s-line').forEach(function(el){ oldBoxes[el.getAttribute('data-lid')] = el.getBoundingClientRect(); });
+      cur = n;
+      stage.innerHTML = stepHTML(steps, n);
+      dots.forEach(function(d,i){ d.classList.toggle('on', i===n); });
+      if (!reduce) {
+        stage.querySelectorAll('.s-line').forEach(function(el){
+          var lid = el.getAttribute('data-lid');
+          var old = oldBoxes[lid];
+          if (old) {
+            var now = el.getBoundingClientRect();
+            var dy = old.top - now.top;
+            if (Math.abs(dy) > 1) {
+              el.animate([{transform:'translateY('+dy+'px)'},{transform:'none'}],{duration:320,easing:'cubic-bezier(.2,.7,.2,1)'});
+            }
+          } else {
+            el.classList.add('enter');
+          }
         });
-        stage.innerHTML = h + '</code></pre>';
-        st.mode = 'morph';
-        var probe = stage.querySelector('.s-line');
-        st.lineH = probe ? probe.offsetHeight : 28;
-      } else {
-        // code<->tex (or tex<->tex): stacked crossfade layers driven by t
-        stage.innerHTML = '<div class="scrolly-xfade"><div class="scrolly-layer" data-layer="a">'
-          + singleHTML(A) + '</div><div class="scrolly-layer" data-layer="b">' + singleHTML(B) + '</div></div>';
-        st.mode = 'xfade';
-        typeset(stage);
       }
-      st.pairA = a; st.pairB = b; st.single = -1;
-    }
-
-    function buildSingle(n){
-      stage.innerHTML = singleHTML(steps[n]);
-      st.single = n; st.pairA = -1; st.pairB = -1; st.mode = 'single';
       typeset(stage);
     }
-
-    function paintDots(on){
-      if (on !== st.dotsOn) {
-        dots.forEach(function(d, k){ d.classList.toggle('on', k === on); });
-        st.dotsOn = on;
-      }
-    }
-
-    function apply(a, b, t){
-      var i, el;
-      if (st.mode === 'morph') {
-        var els = stage.querySelectorAll('.s-line');
-        for (i = 0; i < els.length; i++) {
-          el = els[i];
-          var lid = el.getAttribute('data-lid');
-          var role = el.getAttribute('data-role');
-          if (role === 'enter') {
-            el.style.opacity = t.toFixed(3);
-            el.style.height = Math.max(0, st.lineH * t).toFixed(1) + 'px';
-            el.style.transform = 'translateX(' + (120 * (1 - t)).toFixed(1) + 'px)';
-          } else if (role === 'exit') {
-            el.style.opacity = (1 - t).toFixed(3);
-            el.style.height = Math.max(0, st.lineH * (1 - t)).toFixed(1) + 'px';
-            el.style.transform = 'translateX(' + (-24 * t).toFixed(1) + 'px)';
-          } else {
-            el.style.transform = '';
-            var fa = focusOf(steps[a], lid) ? 1 : 0.28;
-            var fb = focusOf(steps[b], lid) ? 1 : 0.28;
-            el.style.opacity = lerp(fa, fb, t).toFixed(3);
-          }
-        }
-      } else if (st.mode === 'xfade') {
-        var la = stage.querySelector('[data-layer="a"]');
-        var lb = stage.querySelector('[data-layer="b"]');
-        if (la) la.style.opacity = (1 - t).toFixed(3);
-        if (lb) lb.style.opacity = t.toFixed(3);
-      }
-      paintDots(t < 0.5 ? a : b);
-    }
-
-    function update(){
-      var p = Math.max(0, Math.min(progress(), last));
-      if (reduce) {
-        var n = Math.round(p);
-        if (n !== st.single) buildSingle(n);
-        paintDots(n);
-        return;
-      }
-      var a = Math.floor(p), t = p - a;
-      if (a >= last) {
-        if (st.single !== last) buildSingle(last);
-        paintDots(last);
-        return;
-      }
-      var b = a + 1;
-      if (st.pairA !== a || st.pairB !== b) buildPair(a, b);
-      apply(a, b, t);
-    }
-
-    var scheduled = false;
-    function kick(){
-      if (scheduled) return;
-      scheduled = true;
-      requestAnimationFrame(function(){ scheduled = false; update(); });
-    }
-    window.addEventListener('scroll', kick, { passive: true });
-    window.addEventListener('resize', kick);
-    update();
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if (e.isIntersecting) go(parseInt(e.target.getAttribute('data-step'),10)||0);
+      });
+    }, { rootMargin: '-40% 0px -40% 0px' });
+    sections.forEach(function(s){ io.observe(s); });
     root.setAttribute('data-ready', sections.length + '/' + steps.length);
   });
 })();
-
 </script>
 </body>
 </html>
