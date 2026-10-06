@@ -39,6 +39,9 @@ func ParseMarkdown(path string) (*ParsedPage, error) {
 		return nil, fmt.Errorf("parsing frontmatter: %w", err)
 	}
 
+	stripped, scrollyBlocks := extractScrollyBlocks(string(rest))
+	rest = []byte(stripped)
+
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
 	p := parser.NewWithExtensions(extensions)
 	doc := p.Parse(rest)
@@ -64,6 +67,7 @@ func ParseMarkdown(path string) (*ParsedPage, error) {
 
 	output := markdown.Render(doc, renderer)
 	output = RenderCallouts(output)
+	output = RenderScrollyPlaceholders(output, scrollyBlocks)
 
 	words := len(strings.Fields(string(rest)))
 

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="{{ .Title }}{{ if .SiteTitle }} — {{ .SiteTitle }}{{ end }}" />
+<title>{{ .Title }}{{ if .SiteTitle }} — {{ .SiteTitle }}{{ end }}</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<style>
+:root{
+  --bg:#f4f1ea;--surface:#fff;--text:#1c1a17;--body:#3d3a34;--muted:#6f6a60;--faint:#a8a29a;
+  --border:#e2ddd2;--code-bg:#202226;--code-text:#dfddd9;--accent:#3c7878;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--body);font-family:var(--serif);font-size:19px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:0 1.25rem}
+.topbar{display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:0 auto;padding:1rem 1.5rem;font-family:var(--sans);font-size:.85rem}
+.brand{font-weight:700;color:var(--text);text-decoration:none}
+.prose{padding:2rem 0}
+.prose h1{color:var(--text);font-size:2rem;line-height:1.2;letter-spacing:-.02em;margin:.5rem 0 1rem}
+.prose h2{color:var(--text);font-size:1.35rem;margin:2.2em 0 .4em}
+.prose p{margin:.9em 0}
+.prose a{color:var(--accent)}
+.prose code{font-family:var(--mono);font-size:.85em}
+.prose :not(pre)>code{background:#e9e4d8;padding:.1em .4em;border-radius:6px}
+.prose pre:not(.scrolly-code){background:var(--code-bg);color:var(--code-text);border-radius:12px;padding:1rem 1.2rem;overflow:auto;font-size:.82rem;margin:1.3em 0}
+/* ---- scrolly ---- */
+.scrolly{width:100%;margin:0 0 2rem;position:relative;display:block}
+.scrolly-stage-col{position:sticky;top:0;z-index:5;height:46vh;background:var(--code-bg);margin-left:calc(50% - 50vw);width:100vw}
+.scrolly-sticky{height:100%;width:100%}
+.scrolly-stage{height:100%;width:100%;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.scrolly-stage pre.scrolly-code{margin:0;width:100%;max-width:900px;max-height:100%;overflow:auto;background:var(--code-bg);color:var(--code-text);font-family:var(--mono);font-size:15px;line-height:1.8;padding:2rem 1.5rem}
+.scrolly-stage pre code{display:block}
+.s-line{white-space:pre;transition:opacity .3s}
+.s-line.dim{opacity:.28}
+.s-line.enter{animation:s-in .35s cubic-bezier(.2,.7,.2,1) both}
+@keyframes s-in{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:none}}
+.scrolly-tex{color:var(--code-text);font-size:1.3rem;padding:1rem;overflow-x:auto;max-width:100%}
+.scrolly-tex.fade{animation:s-fade .35s ease both}
+@keyframes s-fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.scrolly-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;gap:6px;justify-content:center}
+.scrolly-dot{width:22px;height:3px;border-radius:2px;background:rgba(255,255,255,.22)}
+.scrolly-dot.on{background:#fff}
+.scrolly-prose-col{padding:2rem 0 30vh}
+.scrolly-step{min-height:60vh;padding:1.5rem 0;border-left:3px solid transparent}
+.scrolly-step p{margin:.9em 0}
+.scrolly-step code{color:var(--accent)}
+@media screen and (min-width:1000px){
+  .scrolly{width:1010px;margin-left:-135px;display:flex;gap:0;align-items:flex-start}
+  .scrolly-stage-col{width:460px;min-width:460px;margin-left:0;position:static;height:auto;background:none}
+  .scrolly-sticky{position:sticky;top:15vh;height:65vh;background:var(--code-bg);border-radius:14px;overflow:hidden}
+  .scrolly-prose-col{flex:1;padding:0 0 30vh 3.5rem}
+  .scrolly-step{min-height:70vh}
+}
+footer{border-top:1px solid var(--border);margin-top:3rem;padding:1.5rem 0 2.5rem;font-size:.8rem;font-family:var(--sans);color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.s-line.enter,.scrolly-tex.fade{animation:none}}
+</style>
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true }, options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }, chtml: { scale: 1.04 } };
+</script>
+<script async id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"></script>
+</head>
+<body>
+<div class="topbar"><a class="brand" href="../">{{ if .SiteTitle }}{{ .SiteTitle }}{{ else }}kite{{ end }}</a><span>scrollytelling</span></div>
+<div class="wrap">
+<main class="prose">
+<h1>{{ .Title }}</h1>
+{{ .Content }}
+</main>
+<footer><span>&copy; {{ .Year }}{{ if .AuthorName }} {{ .AuthorName }}{{ end }}</span></footer>
+</div>
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function stepHTML(steps, n){
+    var st = steps[Math.max(0, Math.min(n, steps.length-1))];
+    if (st.lang === 'tex') return '<div class="scrolly-tex fade">$$'+esc(st.tex)+'$$</div>';
+    var h = '<pre class="scrolly-code"><code>';
+    st.lines.forEach(function(ln){
+      var t = ln.text.trim() === '' ? ' ' : ln.text;
+      h += '<div class="s-line'+(ln.focus?'':' dim')+'" data-lid="'+esc(ln.id)+'"><span>'+esc(t)+'</span></div>';
+    });
+    return h + '</code></pre>';
+  }
+  function typeset(el){
+    if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise([el]).catch(function(){}); }
+  }
+  document.querySelectorAll('.scrolly').forEach(function(root){
+    var dataEl = root.querySelector('.scrolly-data');
+    if (!dataEl) return;
+    var steps;
+    try { steps = JSON.parse(dataEl.textContent); } catch(e){ return; }
+    var stage = root.querySelector('.scrolly-stage');
+    var dots = Array.prototype.slice.call(root.querySelectorAll('.scrolly-dot'));
+    var sections = Array.prototype.slice.call(root.querySelectorAll('.scrolly-step'));
+    var cur = 0, animating = false;
+    typeset(stage);
+    function go(n){
+      n = Math.max(0, Math.min(n, steps.length-1));
+      if (n === cur || animating && n === cur) return;
+      // FLIP for code: capture old line boxes by lid
+      var oldBoxes = {};
+      stage.querySelectorAll('.s-line').forEach(function(el){ oldBoxes[el.getAttribute('data-lid')] = el.getBoundingClientRect(); });
+      cur = n;
+      stage.innerHTML = stepHTML(steps, n);
+      dots.forEach(function(d,i){ d.classList.toggle('on', i===n); });
+      if (!reduce) {
+        stage.querySelectorAll('.s-line').forEach(function(el){
+          var lid = el.getAttribute('data-lid');
+          var old = oldBoxes[lid];
+          if (old) {
+            var now = el.getBoundingClientRect();
+            var dy = old.top - now.top;
+            if (Math.abs(dy) > 1) {
+              el.animate([{transform:'translateY('+dy+'px)'},{transform:'none'}],{duration:320,easing:'cubic-bezier(.2,.7,.2,1)'});
+            }
+          } else {
+            el.classList.add('enter');
+          }
+        });
+      }
+      typeset(stage);
+    }
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if (e.isIntersecting) go(parseInt(e.target.getAttribute('data-step'),10)||0);
+      });
+    }, { rootMargin: '-40% 0px -40% 0px' });
+    sections.forEach(function(s){ io.observe(s); });
+  });
+})();
+</script>
+</body>
+</html>
