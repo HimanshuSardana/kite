@@ -102,13 +102,36 @@ func extractScrollyBlocks(src string) (string, []scrollyBlock) {
 	return strings.Join(out, "\n"), blocks
 }
 
+type rawFence struct {
+	lang string
+	meta string
+	code string
+}
+
+func isTexLang(lang string) bool {
+	return lang == "tex" || lang == "latex" || lang == "math"
+}
+
+func buildCodeStep(lang, meta, code string) scrollyStep {
+	if lang == "" {
+		lang = "text"
+	}
+	focus := parseFocus(meta, code)
+	rawLines := strings.Split(code, "\n")
+	stepLines := make([]scrollyLine, len(rawLines))
+	for k, ln := range rawLines {
+		stepLines[k] = scrollyLine{Text: ln, Focus: focus[k+1]}
+	}
+	return scrollyStep{Lang: lang, Lines: stepLines}
+}
+
 func parseScrollyBlock(inner string) scrollyBlock {
 	var b scrollyBlock
 	// Split off prose: everything after the last fence.
-	fences := scrollyFenceRe.FindAllStringSubmatchIndex(inner, -1)
+	fenceIdx := scrollyFenceRe.FindAllStringSubmatchIndex(inner, -1)
 	end := 0
-	if len(fences) > 0 {
-		end = fences[len(fences)-1][1]
+	if len(fenceIdx) > 0 {
+		end = fenceIdx[len(fenceIdx)-1][1]
 	}
 	head := inner
 	proseRaw := ""
@@ -116,24 +139,30 @@ func parseScrollyBlock(inner string) scrollyBlock {
 		head = inner[:end]
 		proseRaw = inner[end:]
 	}
+	var fences []rawFence
 	for _, m := range scrollyFenceRe.FindAllStringSubmatch(head, -1) {
-		lang := strings.ToLower(strings.TrimSpace(m[1]))
-		meta := strings.TrimSpace(m[2])
-		code := strings.Trim(m[3], "\n")
-		if lang == "tex" || lang == "latex" || lang == "math" {
-			b.Steps = append(b.Steps, scrollyStep{Lang: "tex", Tex: code})
+		fences = append(fences, rawFence{
+			lang: strings.ToLower(strings.TrimSpace(m[1])),
+			meta: strings.TrimSpace(m[2]),
+			code: strings.Trim(m[3], "\n"),
+		})
+	}
+	// Fuse an adjacent tex+code fence pair into one combo step: LaTeX
+	// illustration on top, code below, both animated together.
+	for i := 0; i < len(fences); i++ {
+		if isTexLang(fences[i].lang) && i+1 < len(fences) && !isTexLang(fences[i+1].lang) {
+			st := buildCodeStep(fences[i+1].lang, fences[i+1].meta, fences[i+1].code)
+			st.Lang = "combo"
+			st.Tex = fences[i].code
+			b.Steps = append(b.Steps, st)
+			i++
 			continue
 		}
-		if lang == "" {
-			lang = "text"
+		if isTexLang(fences[i].lang) {
+			b.Steps = append(b.Steps, scrollyStep{Lang: "tex", Tex: fences[i].code})
+			continue
 		}
-		focus := parseFocus(meta, code)
-		rawLines := strings.Split(code, "\n")
-		stepLines := make([]scrollyLine, len(rawLines))
-		for k, ln := range rawLines {
-			stepLines[k] = scrollyLine{Text: ln, Focus: focus[k+1]}
-		}
-		b.Steps = append(b.Steps, scrollyStep{Lang: lang, Lines: stepLines})
+		b.Steps = append(b.Steps, buildCodeStep(fences[i].lang, fences[i].meta, fences[i].code))
 	}
 	// Prose split on --- lines.
 	var prose []string
@@ -336,6 +365,11 @@ func renderScrollyStepHTML(steps []scrollyStep, n int) string {
 		return fmt.Sprintf(`<div class="scrolly-tex">$$%s$$</div>`, html.EscapeString(st.Tex))
 	}
 	var sb strings.Builder
+	combo := st.Tex != ""
+	if combo {
+		sb.WriteString(`<div class="scrolly-combo">`)
+		fmt.Fprintf(&sb, `<div class="scrolly-tex">$$%s$$</div>`, html.EscapeString(st.Tex))
+	}
 	fmt.Fprintf(&sb, `<pre class="scrolly-code lang-%s"><code>`, html.EscapeString(st.Lang))
 	for _, ln := range st.Lines {
 		text := ln.Text
@@ -350,6 +384,9 @@ func renderScrollyStepHTML(steps []scrollyStep, n int) string {
 			cls, html.EscapeString(ln.ID), html.EscapeString(text))
 	}
 	sb.WriteString(`</code></pre>`)
+	if combo {
+		sb.WriteString(`</div>`)
+	}
 	return sb.String()
 }
 

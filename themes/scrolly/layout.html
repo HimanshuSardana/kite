@@ -41,6 +41,7 @@ body{background:var(--bg);color:var(--body);font-family:var(--serif);font-size:1
 .scrolly-tex{color:var(--code-text);font-size:1.3rem;padding:1rem;overflow-x:auto;max-width:100%}
 .scrolly-tex.fade{animation:s-fade .35s ease both}
 @keyframes s-fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.scrolly-combo{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:1.4rem;width:100%;max-width:900px;max-height:100%}.scrolly-combo .scrolly-tex{padding:0.2rem 0.5rem}.scrolly-combo pre.scrolly-code{margin:0}
 .scrolly-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;gap:6px;justify-content:center}
 .scrolly-dot{width:22px;height:3px;border-radius:2px;background:rgba(255,255,255,.22)}
 .scrolly-dot.on{background:#fff}
@@ -78,13 +79,16 @@ window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [[
   function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function stepHTML(steps, n){
     var st = steps[Math.max(0, Math.min(n, steps.length-1))];
-    if (st.lang === 'tex') return '<div class="scrolly-tex fade">$$'+esc(st.tex)+'$$</div>';
+    var tex = st.tex ? '<div class="scrolly-tex fade">$$'+esc(st.tex)+'$$</div>' : '';
+    if (st.lang === 'tex') return tex;
     var h = '<pre class="scrolly-code"><code>';
-    st.lines.forEach(function(ln){
+    (st.lines || []).forEach(function(ln){
       var t = ln.text.trim() === '' ? ' ' : ln.text;
       h += '<div class="s-line'+(ln.focus?'':' dim')+'" data-lid="'+esc(ln.id)+'"><span>'+esc(t)+'</span></div>';
     });
-    return h + '</code></pre>';
+    h += '</code></pre>';
+    if (tex) return '<div class="scrolly-combo">' + tex + h + '</div>';
+    return h;
   }
   function typeset(el){
     if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise([el]).catch(function(){}); }
