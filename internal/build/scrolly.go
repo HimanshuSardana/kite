@@ -48,9 +48,10 @@ type scrollyLine struct {
 }
 
 type scrollyStep struct {
-	Lang  string        `json:"lang"` // "js", "tex", ...
+	Lang  string        `json:"lang"` // "js", "tex", "tikzfig", "combo", ...
 	Lines []scrollyLine `json:"lines,omitempty"`
 	Tex   string        `json:"tex,omitempty"`
+	Tikz  string        `json:"tikz,omitempty"`
 	Title string        `json:"title,omitempty"`
 }
 
@@ -147,22 +148,51 @@ func parseScrollyBlock(inner string) scrollyBlock {
 			code: strings.Trim(m[3], "\n"),
 		})
 	}
-	// Fuse an adjacent tex+code fence pair into one combo step: LaTeX
-	// illustration on top, code below, both animated together.
-	for i := 0; i < len(fences); i++ {
-		if isTexLang(fences[i].lang) && i+1 < len(fences) && !isTexLang(fences[i+1].lang) {
-			st := buildCodeStep(fences[i+1].lang, fences[i+1].meta, fences[i+1].code)
+	// Fuse runs of tikz/tex illustration fences into the following code
+	// fence: one combo step with figure(s) on top, code below, both
+	// animated together. A trailing run with no code after it becomes its
+	// own figure-only step. (Plain consecutive code fences stay separate.)
+	var pendTikz, pendTex string
+	haveTikz, haveTex := false, false
+	flushFigs := func() (scrollyStep, bool) {
+		if !haveTikz && !haveTex {
+			return scrollyStep{}, false
+		}
+		st := scrollyStep{}
+		if haveTikz {
+			st.Lang = "tikzfig"
+			st.Tikz = pendTikz
+		}
+		if haveTex {
+			if st.Lang != "" {
+				st.Lang = "combo"
+			} else {
+				st.Lang = "tex"
+			}
+			st.Tex = pendTex
+		}
+		pendTikz, pendTex = "", ""
+		haveTikz, haveTex = false, false
+		return st, true
+	}
+	for _, f := range fences {
+		if f.lang == "tikz" {
+			pendTikz, haveTikz = f.code, true
+			continue
+		}
+		if isTexLang(f.lang) {
+			pendTex, haveTex = f.code, true
+			continue
+		}
+		st := buildCodeStep(f.lang, f.meta, f.code)
+		if fig, ok := flushFigs(); ok {
 			st.Lang = "combo"
-			st.Tex = fences[i].code
-			b.Steps = append(b.Steps, st)
-			i++
-			continue
+			st.Tikz, st.Tex = fig.Tikz, fig.Tex
 		}
-		if isTexLang(fences[i].lang) {
-			b.Steps = append(b.Steps, scrollyStep{Lang: "tex", Tex: fences[i].code})
-			continue
-		}
-		b.Steps = append(b.Steps, buildCodeStep(fences[i].lang, fences[i].meta, fences[i].code))
+		b.Steps = append(b.Steps, st)
+	}
+	if fig, ok := flushFigs(); ok {
+		b.Steps = append(b.Steps, fig)
 	}
 	// Prose split on --- lines.
 	var prose []string
@@ -364,11 +394,19 @@ func renderScrollyStepHTML(steps []scrollyStep, n int) string {
 	if st.Lang == "tex" {
 		return fmt.Sprintf(`<div class="scrolly-tex">$$%s$$</div>`, html.EscapeString(st.Tex))
 	}
+	if st.Lang == "tikzfig" {
+		return fmt.Sprintf(`<div class="scrolly-tikzmount" data-tikz="%d"></div>`, n)
+	}
 	var sb strings.Builder
-	combo := st.Tex != ""
+	combo := st.Tex != "" || st.Tikz != ""
 	if combo {
 		sb.WriteString(`<div class="scrolly-combo">`)
-		fmt.Fprintf(&sb, `<div class="scrolly-tex">$$%s$$</div>`, html.EscapeString(st.Tex))
+		if st.Tikz != "" {
+			fmt.Fprintf(&sb, `<div class="scrolly-tikzmount" data-tikz="%d"></div>`, n)
+		}
+		if st.Tex != "" {
+			fmt.Fprintf(&sb, `<div class="scrolly-tex">$$%s$$</div>`, html.EscapeString(st.Tex))
+		}
 	}
 	fmt.Fprintf(&sb, `<pre class="scrolly-code lang-%s"><code>`, html.EscapeString(st.Lang))
 	for _, ln := range st.Lines {

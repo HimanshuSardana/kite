@@ -7,154 +7,160 @@ tags: [data-structures, demo]
 A stack with `push`, `pop` and `getMin` — all in O(1). The trick is a second stack that remembers the minimum. Scroll: the illustration and the code morph together.
 
 ::: scrolly
+```tikz
+\begin{tikzpicture}[scale=0.85]
+\draw[thick] (0,0) rectangle (1.2,2.0);
+\draw[thick] (2.0,0) rectangle (3.2,2.0);
+\node at (0.6,-0.35) {$S$};
+\node at (2.6,-0.35) {$M$};
+\end{tikzpicture}
+```
 ```tex
 \text{push, pop, getMin — all in } O(1)
 ```
-```js focus=1:5
+```js focus=1:4
 class MinStack {
   constructor() {
-    this.s = [];
-    this.m = [];
+    this.s = [];  // main stack
+    this.m = [];  // min stack
   }
-  push(x) {
-    this.s.push(x);
-    if (!this.m.length || x <= this.getMin())
-      this.m.push(x);
-  }
-  pop() {
-    if (this.top() === this.getMin()) this.m.pop();
-    return this.s.pop();
-  }
-  top() { return this.s[this.s.length - 1]; }
-  getMin() { return this.m[this.m.length - 1]; }
+  // push, pop, top, getMin ...
 }
 
 //> MinStack()
 //  S = []   M = []
 ```
+```tikz
+\begin{tikzpicture}[scale=0.85]
+\draw[thick] (0,0) rectangle (1.2,2.0);
+\draw[thick] (2.0,0) rectangle (3.2,2.0);
+\draw[thick,fill=gray!25] (0,0.0) rectangle (1.2,0.65);
+\node at (0.6,0.32) {$3$};
+\draw[thick,fill=gray!25] (2.0,0.0) rectangle (3.2,0.65);
+\node at (2.6,0.32) {$3$};
+\node at (0.6,-0.35) {$S$};
+\node at (2.6,-0.35) {$M$};
+\end{tikzpicture}
+```
 ```tex
 S = [3],\quad M = [3],\quad \min = 3
 ```
-```js focus=6:10,19:20
-class MinStack {
-  constructor() {
-    this.s = [];
-    this.m = [];
-  }
-  push(x) {
-    this.s.push(x);
-    if (!this.m.length || x <= this.getMin())
-      this.m.push(x);
-  }
-  pop() {
-    if (this.top() === this.getMin()) this.m.pop();
-    return this.s.pop();
-  }
-  top() { return this.s[this.s.length - 1]; }
-  getMin() { return this.m[this.m.length - 1]; }
+```js focus=1:4,7:8
+push(x) {
+  this.s.push(x);
+  if (!this.m.length || x <= this.getMin())
+    this.m.push(x);
 }
 
 //> push(3)
 //  S = [3]   M = [3]
 ```
+```tikz
+\begin{tikzpicture}[scale=0.85]
+\draw[thick] (0,0) rectangle (1.2,2.0);
+\draw[thick] (2.0,0) rectangle (3.2,2.0);
+\draw[thick] (0,0.0) rectangle (1.2,0.65);
+\node at (0.6,0.32) {$3$};
+\draw[thick,fill=gray!25] (0,0.65) rectangle (1.2,1.3);
+\node at (0.6,0.97) {$5$};
+\draw[thick] (2.0,0.0) rectangle (3.2,0.65);
+\node at (2.6,0.32) {$3$};
+\node at (0.6,-0.35) {$S$};
+\node at (2.6,-0.35) {$M$};
+\end{tikzpicture}
+```
 ```tex
 S = [3, 5],\quad M = [3],\quad \min = 3
 ```
-```js focus=6:10,19:20
-class MinStack {
-  constructor() {
-    this.s = [];
-    this.m = [];
-  }
-  push(x) {
-    this.s.push(x);
-    if (!this.m.length || x <= this.getMin())
-      this.m.push(x);
-  }
-  pop() {
-    if (this.top() === this.getMin()) this.m.pop();
-    return this.s.pop();
-  }
-  top() { return this.s[this.s.length - 1]; }
-  getMin() { return this.m[this.m.length - 1]; }
+```js focus=1:4,7:8
+push(x) {
+  this.s.push(x);
+  if (!this.m.length || x <= this.getMin())
+    this.m.push(x);
 }
 
 //> push(5)
 //  S = [3, 5]   M = [3]
 ```
+```tikz
+\begin{tikzpicture}[scale=0.85]
+\draw[thick] (0,0) rectangle (1.2,2.0);
+\draw[thick] (2.0,0) rectangle (3.2,2.0);
+\draw[thick] (0,0.0) rectangle (1.2,0.65);
+\node at (0.6,0.32) {$3$};
+\draw[thick] (0,0.65) rectangle (1.2,1.3);
+\node at (0.6,0.97) {$5$};
+\draw[thick,fill=gray!25] (0,1.3) rectangle (1.2,1.95);
+\node at (0.6,1.62) {$2$};
+\draw[thick] (2.0,0.0) rectangle (3.2,0.65);
+\node at (2.6,0.32) {$3$};
+\draw[thick,fill=gray!25] (2.0,0.65) rectangle (3.2,1.3);
+\node at (2.6,0.97) {$2$};
+\node at (0.6,-0.35) {$S$};
+\node at (2.6,-0.35) {$M$};
+\end{tikzpicture}
+```
 ```tex
 S = [3, 5, 2],\quad M = [3, 2],\quad \min = 2
 ```
-```js focus=6:10,19:20
-class MinStack {
-  constructor() {
-    this.s = [];
-    this.m = [];
-  }
-  push(x) {
-    this.s.push(x);
-    if (!this.m.length || x <= this.getMin())
-      this.m.push(x);
-  }
-  pop() {
-    if (this.top() === this.getMin()) this.m.pop();
-    return this.s.pop();
-  }
-  top() { return this.s[this.s.length - 1]; }
-  getMin() { return this.m[this.m.length - 1]; }
+```js focus=1:4,7:8
+push(x) {
+  this.s.push(x);
+  if (!this.m.length || x <= this.getMin())
+    this.m.push(x);
 }
 
 //> push(2)
 //  S = [3, 5, 2]   M = [3, 2]
 ```
+```tikz
+\begin{tikzpicture}[scale=0.85]
+\draw[thick] (0,0) rectangle (1.2,2.0);
+\draw[thick] (2.0,0) rectangle (3.2,2.0);
+\draw[thick] (0,0.0) rectangle (1.2,0.65);
+\node at (0.6,0.32) {$3$};
+\draw[thick] (0,0.65) rectangle (1.2,1.3);
+\node at (0.6,0.97) {$5$};
+\draw[thick] (2.0,0.0) rectangle (3.2,0.65);
+\node at (2.6,0.32) {$3$};
+\node at (0.6,-0.35) {$S$};
+\node at (2.6,-0.35) {$M$};
+\end{tikzpicture}
+```
 ```tex
 S = [3, 5],\quad M = [3],\quad \min = 3
 ```
-```js focus=11:14,19:20
-class MinStack {
-  constructor() {
-    this.s = [];
-    this.m = [];
-  }
-  push(x) {
-    this.s.push(x);
-    if (!this.m.length || x <= this.getMin())
-      this.m.push(x);
-  }
-  pop() {
-    if (this.top() === this.getMin()) this.m.pop();
-    return this.s.pop();
-  }
-  top() { return this.s[this.s.length - 1]; }
-  getMin() { return this.m[this.m.length - 1]; }
+```js focus=1:3,6:7
+pop() {
+  if (this.top() === this.getMin()) this.m.pop();
+  return this.s.pop();
 }
 
 //> pop()
 //  S = [3, 5]   M = [3]
 ```
+```tikz
+\begin{tikzpicture}[scale=0.85]
+\draw[thick] (0,0) rectangle (1.2,2.0);
+\draw[thick] (2.0,0) rectangle (3.2,2.0);
+\draw[thick] (0,0.0) rectangle (1.2,0.65);
+\node at (0.6,0.32) {$3$};
+\draw[thick] (0,0.65) rectangle (1.2,1.3);
+\node at (0.6,0.97) {$5$};
+\draw[thick] (2.0,0.0) rectangle (3.2,0.65);
+\node at (2.6,0.32) {$3$};
+\node at (0.6,-0.35) {$S$};
+\node at (2.6,-0.35) {$M$};
+\end{tikzpicture}
+```
 ```tex
 \min = 3
 ```
-```js focus=16,19:20
-class MinStack {
-  constructor() {
-    this.s = [];
-    this.m = [];
-  }
-  push(x) {
-    this.s.push(x);
-    if (!this.m.length || x <= this.getMin())
-      this.m.push(x);
-  }
-  pop() {
-    if (this.top() === this.getMin()) this.m.pop();
-    return this.s.pop();
-  }
-  top() { return this.s[this.s.length - 1]; }
-  getMin() { return this.m[this.m.length - 1]; }
-}
+```js focus=1:2,5:6
+top()    { return this.s[this.s.length - 1]; }
+getMin() { return this.m[this.m.length - 1]; }
 
-//> getMin()
+//> getMin() -> 3
 //  S = [3, 5]   M = [3]
 ```
 
