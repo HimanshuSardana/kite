@@ -34,7 +34,7 @@ body{background:var(--bg);color:var(--body);font-family:var(--serif);font-size:1
 .scrolly-stage{height:100%;width:100%;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .scrolly-stage pre.scrolly-code{margin:0;width:100%;max-width:900px;max-height:100%;overflow:auto;background:var(--code-bg);color:var(--code-text);font-family:var(--mono);font-size:15px;line-height:1.8;padding:2rem 1.5rem}
 .scrolly-stage pre code{display:block}
-.s-line{white-space:pre;transition:opacity .3s}
+.s-line{white-space:pre;overflow:hidden}
 .s-line.dim{opacity:.28}
 .s-line.enter{animation:s-in .35s cubic-bezier(.2,.7,.2,1) both}
 @keyframes s-in{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:none}}
@@ -170,6 +170,8 @@ window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [[
           if (oldBoxes[lid]) deltas[lid] = oldBoxes[lid].top - el.getBoundingClientRect().top;
         });
         st.deltas = deltas; st.mode = 'morph';
+        var probe = stage.querySelector('.s-line');
+        st.lineH = probe ? probe.offsetHeight : 28;
       } else {
         // code<->tex (or tex<->tex): stacked crossfade layers driven by t
         stage.innerHTML = '<div class="scrolly-xfade"><div class="scrolly-layer" data-layer="a">'
@@ -203,10 +205,12 @@ window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [[
           var role = el.getAttribute('data-role');
           if (role === 'enter') {
             el.style.opacity = t.toFixed(3);
-            el.style.transform = 'translateX(' + (250 * (1 - t)).toFixed(1) + 'px)';
+            el.style.height = Math.max(0, st.lineH * t).toFixed(1) + 'px';
+            el.style.transform = 'translateX(' + (120 * (1 - t)).toFixed(1) + 'px)';
           } else if (role === 'exit') {
             el.style.opacity = (1 - t).toFixed(3);
-            el.style.transform = 'translateX(' + (-60 * t).toFixed(1) + 'px)';
+            el.style.height = Math.max(0, st.lineH * (1 - t)).toFixed(1) + 'px';
+            el.style.transform = 'translateX(' + (-24 * t).toFixed(1) + 'px)';
           } else {
             var d = st.deltas[lid] || 0;
             el.style.transform = d ? 'translateY(' + (d * (1 - t)).toFixed(1) + 'px)' : '';
