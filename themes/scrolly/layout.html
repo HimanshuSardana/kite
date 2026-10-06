@@ -131,6 +131,7 @@ window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [[
       });
     }, { rootMargin: '-40% 0px -40% 0px' });
     sections.forEach(function(s){ io.observe(s); });
+    root.setAttribute('data-ready', sections.length + '/' + steps.length);
   });
 })();
 </script>

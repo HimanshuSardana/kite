@@ -293,7 +293,11 @@ func renderScrollyBlock(b scrollyBlock, idx int) string {
 	data, _ := json.Marshal(b.Steps)
 	var sb strings.Builder
 	fmt.Fprintf(&sb, `<div class="scrolly" data-scrolly="%d">`, idx)
-	fmt.Fprintf(&sb, `<script type="application/json" class="scrolly-data">%s</script>`, html.EscapeString(string(data)))
+	// NOTE: no HTML-escaping here. Script tags are raw-text elements (entities
+	// are NOT decoded), so escaped JSON would fail to parse. This is safe:
+	// encoding/json escapes <, >, & to \u003c/\u003e/\u0026, so the payload
+	// can never contain a literal </script>.
+	fmt.Fprintf(&sb, `<script type="application/json" class="scrolly-data">%s</script>`, string(data))
 	sb.WriteString(`<div class="scrolly-stage-col"><div class="scrolly-sticky"><div class="scrolly-stage">`)
 	sb.WriteString(renderScrollyStepHTML(b.Steps, 0))
 	sb.WriteString(`</div><div class="scrolly-dots">`)
