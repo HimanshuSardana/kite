@@ -50,6 +50,8 @@ html,body{overflow-x:clip}
 .tikz-spinner{width:18px;height:18px;flex:0 0 auto;border-radius:50%;border:2px solid rgba(255,255,255,.18);border-top-color:rgba(255,255,255,.6);animation:tikz-spin .9s linear infinite}
 @keyframes tikz-spin{to{transform:rotate(360deg)}}
 figure.tikz:not(.tikz-loading) .tikz-placeholder,figure.tikz.tikz-failed .tikz-spinner{display:none}
+.scrolly-scene{display:flex;justify-content:center;min-height:0}
+.scrolly-scene svg{width:min(100%,440px);height:auto;max-height:30vh}
 .scrolly-dots{flex:0 0 auto;display:flex;gap:6px;justify-content:center;padding:.7rem 0 1.1rem}
 .scrolly-dot{width:22px;height:3px;border-radius:2px;background:rgba(255,255,255,.22)}
 .scrolly-dot.on{background:#fff}
@@ -99,16 +101,17 @@ window.onload = null;
   function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function stepHTML(steps, n){
     var st = steps[Math.max(0, Math.min(n, steps.length-1))];
+    var sc = st.scene ? '<div class="scrolly-scene" data-scene="'+n+'"></div>' : '';
     var fig = st.tikz ? '<div class="scrolly-tikzmount" data-tikz="'+n+'"></div>' : '';
     var tex = st.tex ? '<div class="scrolly-tex fade">$$'+esc(st.tex)+'$$</div>' : '';
-    if (st.lang === 'tex' || st.lang === 'tikzfig') return fig + tex;
+    if (st.lang === 'tex' || st.lang === 'tikzfig' || st.lang === 'scene') return sc + fig + tex;
     var h = '<pre class="scrolly-code"><code>';
     (st.lines || []).forEach(function(ln){
       var t = ln.text.trim() === '' ? ' ' : ln.text;
       h += '<div class="s-line'+(ln.focus?'':' dim')+'" data-lid="'+esc(ln.id)+'"><span>'+esc(t)+'</span></div>';
     });
     h += '</code></pre>';
-    if (fig || tex) return '<div class="scrolly-combo">' + fig + tex + h + '</div>';
+    if (sc || fig || tex) return '<div class="scrolly-combo">' + sc + fig + tex + h + '</div>';
     return h;
   }
   // TikZ figures: compiled once per step, then the node is moved into the
@@ -159,6 +162,119 @@ window.onload = null;
   function typeset(el){
     if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise([el]).catch(function(){}); }
   }
+  // Manim-lite scene engine: one persistent SVG per story. Each step only
+  // declares *state*; boxes are keyed (stack:index) across steps, so pushes
+  // drop in, pops float away, and kept boxes never move. LaTeX-free, KBs.
+  function parseScene(src){
+    var stacks = [];
+    (src || '').split('\n').forEach(function(line){
+      var m = line.match(/^\s*stack\s+([A-Za-z_]\w*)\s*:\s*\[(.*)\]\s*(?:highlight\s*=\s*(\S+))?\s*$/);
+      if (!m) return;
+      var vals = m[2].trim() ? m[2].split(',').map(function(x){ return x.trim(); }) : [];
+      stacks.push({ name: m[1], values: vals, hl: (m[3] || 'none').toLowerCase() });
+    });
+    return stacks;
+  }
+  var SC = { boxW: 116, boxH: 42, gap: 76, padX: 24, padTop: 88, labelH: 46,
+    ink: '#dfddd9', faint: 'rgba(223,221,217,0.28)', hl: '#5ec8b8', boxFill: '#26292e' };
+  function ScenePlayer(allStates){
+    var order = [], maxDepth = {};
+    allStates.forEach(function(sts){
+      (sts || []).forEach(function(s){
+        if (order.indexOf(s.name) < 0) order.push(s.name);
+        maxDepth[s.name] = Math.max(maxDepth[s.name] || 0, s.values.length);
+      });
+    });
+    var md = 1;
+    order.forEach(function(nm){ md = Math.max(md, maxDepth[nm] || 0); });
+    var W = SC.padX * 2 + order.length * SC.boxW + (order.length - 1) * SC.gap;
+    var H = SC.padTop + md * SC.boxH + SC.labelH;
+    var NS = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('role', 'img');
+    function x0(i){ return SC.padX + i * (SC.boxW + SC.gap); }
+    function yOf(j){ return SC.padTop + (md - 1 - j) * SC.boxH; }
+    order.forEach(function(name, i){
+      for (var j = 0; j < (maxDepth[name] || 0); j++) {
+        var r = document.createElementNS(NS, 'rect');
+        r.setAttribute('x', x0(i)); r.setAttribute('y', yOf(j));
+        r.setAttribute('width', SC.boxW); r.setAttribute('height', SC.boxH);
+        r.setAttribute('fill', 'none'); r.setAttribute('stroke', SC.faint);
+        r.setAttribute('stroke-dasharray', '5 4');
+        svg.appendChild(r);
+      }
+      var t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', x0(i) + SC.boxW / 2);
+      t.setAttribute('y', SC.padTop + md * SC.boxH + 27);
+      t.setAttribute('text-anchor', 'middle'); t.setAttribute('fill', SC.ink);
+      t.setAttribute('font-size', '17'); t.setAttribute('font-style', 'italic');
+      t.textContent = name;
+      svg.appendChild(t);
+    });
+    var live = {};
+    function resolveHl(s, vals){
+      if (s.hl === 'top') return vals.length ? vals.length - 1 : -1;
+      var n = parseInt(s.hl, 10);
+      if (!isNaN(n) && n >= 0 && n < vals.length) return n;
+      return -1;
+    }
+    function mkBox(name, j, value){
+      var i = order.indexOf(name);
+      var g = document.createElementNS(NS, 'g');
+      var r = document.createElementNS(NS, 'rect');
+      r.setAttribute('x', x0(i)); r.setAttribute('y', yOf(j));
+      r.setAttribute('width', SC.boxW); r.setAttribute('height', SC.boxH);
+      r.setAttribute('fill', SC.boxFill);
+      r.setAttribute('stroke', SC.ink); r.setAttribute('stroke-width', '1.5');
+      var t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', x0(i) + SC.boxW / 2);
+      t.setAttribute('y', yOf(j) + SC.boxH / 2 + 6);
+      t.setAttribute('text-anchor', 'middle'); t.setAttribute('fill', SC.ink);
+      t.setAttribute('font-size', '17'); t.setAttribute('font-family', 'ui-monospace,Menlo,Consolas,monospace');
+      t.textContent = value;
+      g.appendChild(r); g.appendChild(t); svg.appendChild(g);
+      return { g: g, rect: r, txt: t, value: value };
+    }
+    function goto(stacks, animate){
+      var want = {};
+      stacks.forEach(function(s){ want[s.name] = s.values; });
+      Object.keys(live).forEach(function(k){
+        var p = k.split(':'), arr = want[p[0]] || [];
+        if (+p[1] >= arr.length) {
+          var dead = live[k]; delete live[k];
+          if (animate) {
+            var a = dead.g.animate(
+              [{ transform: 'translateY(0)', opacity: 1 }, { transform: 'translateY(-64px)', opacity: 0 }],
+              { duration: 300, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' });
+            a.onfinish = function(){ if (dead.g.parentNode) dead.g.parentNode.removeChild(dead.g); };
+          } else if (dead.g.parentNode) dead.g.parentNode.removeChild(dead.g);
+        }
+      });
+      order.forEach(function(name){
+        var s = null;
+        stacks.forEach(function(x){ if (x.name === name) s = x; });
+        var vals = s ? s.values : [];
+        var hl = s ? resolveHl(s, vals) : -1;
+        vals.forEach(function(v, j){
+          var k = name + ':' + j;
+          if (!live[k]) {
+            live[k] = mkBox(name, j, v);
+            if (animate) live[k].g.animate(
+              [{ transform: 'translateY(-72px)', opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }],
+              { duration: 380, easing: 'cubic-bezier(.2,.7,.2,1)' });
+          } else if (live[k].value !== v) {
+            live[k].value = v; live[k].txt.textContent = v;
+            if (animate) live[k].g.animate([{ opacity: 0.2 }, { opacity: 1 }], { duration: 240 });
+          }
+          live[k].rect.setAttribute('stroke', (j === hl) ? SC.hl : SC.ink);
+          live[k].rect.setAttribute('stroke-width', (j === hl) ? '3' : '1.5');
+        });
+      });
+    }
+    function hide(){ if (svg.parentNode) svg.parentNode.removeChild(svg); }
+    return { svg: svg, goto: goto, hide: hide };
+  }
   document.querySelectorAll('.scrolly').forEach(function(root){
     var dataEl = root.querySelector('.scrolly-data');
     if (!dataEl) return;
@@ -168,6 +284,15 @@ window.onload = null;
     var dots = Array.prototype.slice.call(root.querySelectorAll('.scrolly-dot'));
     var sections = Array.prototype.slice.call(root.querySelectorAll('.scrolly-step'));
     var cur = 0, animating = false;
+    var sceneStates = steps.map(function(x){ return x.scene ? parseScene(x.scene) : null; });
+    var player = sceneStates.some(function(x){ return !!x; }) ? ScenePlayer(sceneStates) : null;
+    function syncScene(n){
+      if (!player) return;
+      if (steps[n] && steps[n].scene) {
+        var m = stage.querySelector('[data-scene="'+n+'"]');
+        if (m) { m.appendChild(player.svg); player.goto(sceneStates[n], !reduce); }
+      } else player.hide();
+    }
     typeset(stage);
     function go(n){
       n = Math.max(0, Math.min(n, steps.length-1));
@@ -195,6 +320,7 @@ window.onload = null;
       }
       typeset(stage);
       mountTikz(root, stage, n, steps);
+      syncScene(n);
     }
     var io = new IntersectionObserver(function(es){
       es.forEach(function(e){
@@ -215,6 +341,7 @@ window.onload = null;
     });
     tikzDone.observe(stage, { childList: true, subtree: true });
     mountTikz(root, stage, cur, steps);
+    syncScene(cur);
     root.setAttribute('data-ready', sections.length + '/' + steps.length);
   });
 })();

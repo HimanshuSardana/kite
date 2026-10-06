@@ -52,6 +52,7 @@ type scrollyStep struct {
 	Lines []scrollyLine `json:"lines,omitempty"`
 	Tex   string        `json:"tex,omitempty"`
 	Tikz  string        `json:"tikz,omitempty"`
+	Scene string        `json:"scene,omitempty"`
 	Title string        `json:"title,omitempty"`
 }
 
@@ -152,10 +153,10 @@ func parseScrollyBlock(inner string) scrollyBlock {
 	// fence: one combo step with figure(s) on top, code below, both
 	// animated together. A trailing run with no code after it becomes its
 	// own figure-only step. (Plain consecutive code fences stay separate.)
-	var pendTikz, pendTex string
-	haveTikz, haveTex := false, false
+	var pendTikz, pendTex, pendScene string
+	haveTikz, haveTex, haveScene := false, false, false
 	flushFigs := func() (scrollyStep, bool) {
-		if !haveTikz && !haveTex {
+		if !haveTikz && !haveTex && !haveScene {
 			return scrollyStep{}, false
 		}
 		st := scrollyStep{}
@@ -171,11 +172,23 @@ func parseScrollyBlock(inner string) scrollyBlock {
 			}
 			st.Tex = pendTex
 		}
-		pendTikz, pendTex = "", ""
-		haveTikz, haveTex = false, false
+		if haveScene {
+			if st.Lang != "" {
+				st.Lang = "combo"
+			} else {
+				st.Lang = "scene"
+			}
+			st.Scene = pendScene
+		}
+		pendTikz, pendTex, pendScene = "", "", ""
+		haveTikz, haveTex, haveScene = false, false, false
 		return st, true
 	}
 	for _, f := range fences {
+		if f.lang == "scene" {
+			pendScene, haveScene = f.code, true
+			continue
+		}
 		if f.lang == "tikz" {
 			pendTikz, haveTikz = f.code, true
 			continue
@@ -187,7 +200,7 @@ func parseScrollyBlock(inner string) scrollyBlock {
 		st := buildCodeStep(f.lang, f.meta, f.code)
 		if fig, ok := flushFigs(); ok {
 			st.Lang = "combo"
-			st.Tikz, st.Tex = fig.Tikz, fig.Tex
+			st.Tikz, st.Tex, st.Scene = fig.Tikz, fig.Tex, fig.Scene
 		}
 		b.Steps = append(b.Steps, st)
 	}
@@ -397,10 +410,16 @@ func renderScrollyStepHTML(steps []scrollyStep, n int) string {
 	if st.Lang == "tikzfig" {
 		return fmt.Sprintf(`<div class="scrolly-tikzmount" data-tikz="%d"></div>`, n)
 	}
+	if st.Lang == "scene" {
+		return fmt.Sprintf(`<div class="scrolly-scene" data-scene="%d"></div>`, n)
+	}
 	var sb strings.Builder
-	combo := st.Tex != "" || st.Tikz != ""
+	combo := st.Tex != "" || st.Tikz != "" || st.Scene != ""
 	if combo {
 		sb.WriteString(`<div class="scrolly-combo">`)
+		if st.Scene != "" {
+			fmt.Fprintf(&sb, `<div class="scrolly-scene" data-scene="%d"></div>`, n)
+		}
 		if st.Tikz != "" {
 			fmt.Fprintf(&sb, `<div class="scrolly-tikzmount" data-tikz="%d"></div>`, n)
 		}
