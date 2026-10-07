@@ -141,6 +141,14 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;padding:.1em 0}
 @keyframes tikz-spin{to{transform:rotate(360deg)}}
 figure.tikz:not(.tikz-loading) .tikz-placeholder,figure.tikz.tikz-failed .tikz-spinner{display:none}
 html:not([data-theme="light"]) .prose .tikz svg{filter:invert(1) hue-rotate(180deg)}
+/* diagrams (Mermaid) — same lazy placeholder pattern as TikZ; the neutral
+   theme plus the same invert filter keeps monochrome in both modes */
+.prose .mermaid{margin:1.6em 0;min-height:120px;display:flex;align-items:center;justify-content:center}
+.prose .mermaid svg{max-width:100%;height:auto}
+.mermaid-placeholder{display:flex;align-items:center;gap:.6rem;color:var(--faint);font-size:.82rem}
+.mermaid-spinner{width:18px;height:18px;flex:0 0 auto;border-radius:50%;border:2px solid var(--border);border-top-color:var(--muted);animation:tikz-spin .9s linear infinite}
+figure.mermaid:not(.mermaid-loading) .mermaid-placeholder,figure.mermaid.mermaid-failed .mermaid-spinner{display:none}
+html:not([data-theme="light"]) .prose .mermaid svg{filter:invert(1) hue-rotate(180deg)}
 /* command palette */
 .palette-backdrop{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;padding:12vh 1rem 1rem}
 .palette-backdrop.open{display:flex}
@@ -385,46 +393,57 @@ window.addEventListener('pagereveal', function(e){
 })();
 </script>
 <script>
-// LaTeX diagrams: rewrite ```tikz fenced blocks into placeholder figures with
-// a loading spinner. The TikZ source stays inert (text/plain) until the
-// figure scrolls near the viewport; only then is it handed to TikZJax (whose
-// on-load renderer is captured below), so heavy TeX compilation happens on
-// demand instead of on every page load. Runs before Prism and tikzjax.js.
+// Diagrams: rewrite ```tikz and ```mermaid fenced blocks into placeholder
+// figures with a loading spinner. Each source stays inert (text/plain) until
+// its figure scrolls near the viewport; only then is it compiled — TikZJax
+// for tikz (whose on-load renderer is captured below), mermaid.render for
+// mermaid (library fetched on first use). Heavy rendering happens on demand
+// instead of on every page load. Runs before Prism and tikzjax.js.
 (function(){
   var figures = [];
-  Array.prototype.forEach.call(document.querySelectorAll('pre > code.language-tikz'), function(code){
-    var pre = code.parentNode;
-    var fig = document.createElement('figure');
-    fig.className = 'tikz tikz-loading';
-    var ph = document.createElement('div');
-    ph.className = 'tikz-placeholder';
-    ph.setAttribute('aria-hidden', 'true');
-    var spin = document.createElement('span');
-    spin.className = 'tikz-spinner';
-    var label = document.createElement('span');
-    label.className = 'tikz-loading-text';
-    label.textContent = 'Rendering diagram\u2026';
-    ph.appendChild(spin);
-    ph.appendChild(label);
-    var src = document.createElement('script');
-    src.type = 'text/plain';
-    src.className = 'tikz-source';
-    src.textContent = code.textContent;
-    fig.appendChild(ph);
-    fig.appendChild(src);
-    pre.parentNode.replaceChild(fig, pre);
-    figures.push(fig);
-    // give up gracefully if rendering never finishes
-    setTimeout(function(){
-      if (fig.classList.contains('tikz-loading') && !fig.querySelector('svg')) {
-        fig.classList.add('tikz-failed');
-        label.textContent = 'Diagram failed to load.';
-      }
-    }, 30000);
-  });
+  var mmdCount = 0;
+  function collect(kind, selector){
+    Array.prototype.forEach.call(document.querySelectorAll(selector), function(code){
+      var pre = code.parentNode;
+      var fig = document.createElement('figure');
+      fig.className = kind + ' ' + kind + '-loading';
+      var ph = document.createElement('div');
+      ph.className = kind + '-placeholder';
+      ph.setAttribute('aria-hidden', 'true');
+      var spin = document.createElement('span');
+      spin.className = kind + '-spinner';
+      var label = document.createElement('span');
+      label.className = kind + '-loading-text';
+      label.textContent = 'Rendering diagram\u2026';
+      ph.appendChild(spin);
+      ph.appendChild(label);
+      var src = document.createElement('script');
+      src.type = 'text/plain';
+      src.className = kind + '-source';
+      src.textContent = code.textContent;
+      fig.appendChild(ph);
+      fig.appendChild(src);
+      pre.parentNode.replaceChild(fig, pre);
+      var item = { fig: fig, kind: kind, label: label, text: code.textContent, id: mmdCount++ };
+      figures.push(item);
+      // give up gracefully if rendering never finishes
+      setTimeout(function(){ if (isLoading(item)) markFailed(item); }, 30000);
+    });
+  }
+  collect('tikz', 'pre > code.language-tikz');
+  collect('mermaid', 'pre > code.language-mermaid');
   if (!figures.length) return;
 
-  // success path: TikZJax swaps the script for an <svg>; drop the spinner
+  function isLoading(item){
+    return item.fig.classList.contains(item.kind + '-loading') && !item.fig.querySelector('svg');
+  }
+  function markFailed(item){
+    if (!isLoading(item)) return;
+    item.fig.classList.add(item.kind + '-failed');
+    item.label.textContent = 'Diagram failed to load.';
+  }
+
+  // success path (TikZ): TikZJax swaps the script for an <svg>; drop spinner
   var done = new MutationObserver(function(muts){
     muts.forEach(function(m){
       Array.prototype.forEach.call(m.addedNodes, function(n){
@@ -438,13 +457,7 @@ window.addEventListener('pagereveal', function(e){
   done.observe(document.body, { childList: true, subtree: true });
 
   function failAll(){
-    figures.forEach(function(fig){
-      if (fig.classList.contains('tikz-loading') && !fig.querySelector('svg')) {
-        fig.classList.add('tikz-failed');
-        var label = fig.querySelector('.tikz-loading-text');
-        if (label) label.textContent = 'Diagram failed to load.';
-      }
-    });
+    figures.forEach(function(item){ if (item.kind === 'tikz') markFailed(item); });
   }
   // coalesce rapid intersections into one TikZJax pass (already-rendered
   // figures have no script left, so repeat passes are no-ops for them)
@@ -459,40 +472,100 @@ window.addEventListener('pagereveal', function(e){
       try { fn(); } catch (e) { failAll(); }
     }, 60);
   }
-  function activate(fig){
-    var src = fig.querySelector('script.tikz-source');
+  function activateTikz(item){
+    var src = item.fig.querySelector('script.tikz-source');
     if (src) {
       var live = document.createElement('script');
       live.type = 'text/tikz';
-      live.textContent = src.textContent;
+      live.textContent = item.text;
       src.parentNode.replaceChild(live, src);
     }
     requestRender();
   }
+  // mermaid: library fetched once, on first use; each figure renders itself
+  var mermaidPromise = null;
+  function ensureMermaid(){
+    if (window.mermaid && window.mermaid.render) return Promise.resolve(window.mermaid);
+    if (!mermaidPromise) {
+      mermaidPromise = new Promise(function(resolve, reject){
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
+        s.onload = function(){
+          try {
+            window.mermaid.initialize({
+              startOnLoad: false,
+              theme: 'neutral',
+              securityLevel: 'strict',
+              fontFamily: '-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif'
+            });
+            resolve(window.mermaid);
+          } catch (e) { reject(e); }
+        };
+        s.onerror = function(){ reject(new Error('mermaid failed to load')); };
+        document.head.appendChild(s);
+      });
+    }
+    return mermaidPromise;
+  }
+  function activateMermaid(item){
+    ensureMermaid().then(function(mm){
+      return mm.render('kite-mmd-' + item.id, item.text);
+    }).then(function(out){
+      var fig = item.fig;
+      if (fig.querySelector('svg')) return;
+      var holder = document.createElement('div');
+      holder.className = 'mermaid-svg';
+      holder.innerHTML = out.svg;
+      var src = fig.querySelector('script.mermaid-source');
+      if (src) src.parentNode.replaceChild(holder, src);
+      else fig.appendChild(holder);
+      try { if (out.bindFunctions) out.bindFunctions(holder); } catch (e) {}
+      fig.classList.remove('mermaid-loading');
+    }).catch(function(){ markFailed(item); });
+  }
+  function activate(item){
+    if (item.kind === 'mermaid') activateMermaid(item);
+    else activateTikz(item);
+  }
+  function itemFor(el){
+    for (var i = 0; i < figures.length; i++) {
+      if (figures[i].fig === el) return figures[i];
+    }
+    return null;
+  }
   // render everything now (used by headless captures; normal visits go
   // through the observer below)
   window.__kiteRenderAllTikZ = function(){
-    figures.forEach(function(fig){
-      var src = fig.querySelector('script.tikz-source');
-      if (src && !fig.querySelector('svg')) {
+    figures.forEach(function(item){
+      if (item.kind !== 'tikz') return;
+      var src = item.fig.querySelector('script.tikz-source');
+      if (src && !item.fig.querySelector('svg')) {
         var live = document.createElement('script');
         live.type = 'text/tikz';
-        live.textContent = src.textContent;
+        live.textContent = item.text;
         src.parentNode.replaceChild(live, src);
       }
     });
     var fn = window.__kiteTikzRender;
     if (typeof fn === 'function') { try { fn(); } catch (e) {} }
   };
+  window.__kiteRenderAllMermaid = function(){
+    figures.forEach(function(item){ if (item.kind === 'mermaid') activateMermaid(item); });
+  };
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(en){
-        if (en.isIntersecting) { io.unobserve(en.target); activate(en.target); }
+        if (!en.isIntersecting) return;
+        var item = itemFor(en.target);
+        if (!item) return;
+        io.unobserve(en.target);
+        activate(item);
       });
     }, { rootMargin: '400px 0px' });
-    figures.forEach(function(fig){ io.observe(fig); });
+    figures.forEach(function(item){ io.observe(item.fig); });
   } else {
     window.__kiteRenderAllTikZ();
+    window.__kiteRenderAllMermaid();
   }
 })();
 </script>

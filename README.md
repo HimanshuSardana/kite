@@ -122,7 +122,7 @@ Kite comes with 13 built-in themes:
 - terminal-gruvbox
 - tufte
 - magical
-- notes — margin/floating table of contents, four-per-row home grid and LaTeX math + TikZ diagrams
+- notes — margin/floating table of contents, four-per-row home grid and LaTeX math + TikZ/Mermaid diagrams
 - minimal-notes — same post pages as notes, slrncl-style dateline index home page
 - flectar — dark SaaS-landing style home (hero, featured-post window, archive strip, cards) with matching serif post pages
 
