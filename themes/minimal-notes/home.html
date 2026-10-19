@@ -144,8 +144,19 @@ html[data-vt="theme"]::view-transition-new(root){z-index:2;clip-path:circle(0 at
       sync();
     }
     if (document.startViewTransition) {
-      var x = (e && e.clientX != null) ? e.clientX : window.innerWidth / 2;
-      var y = (e && e.clientY != null) ? e.clientY : 0;
+      // Origin is the toggle itself. A mouse/touch click reports clientX/Y, but
+      // a keyboard-activated or synthetic click reports 0,0, which would open
+      // the circle from the top-left corner. Fall back to the button's centre.
+      var px = e && (e.clientX || e.clientY);
+      var x, y;
+      if (px) {
+        x = e.clientX;
+        y = e.clientY;
+      } else {
+        var rect = btn.getBoundingClientRect();
+        x = rect.left + rect.width / 2;
+        y = rect.top + rect.height / 2;
+      }
       var root = document.documentElement;
       // Radius must cover the whole snapshot from any origin. On mobile the
       // snapshot can extend past window.innerHeight (dynamic URL bar), so use
