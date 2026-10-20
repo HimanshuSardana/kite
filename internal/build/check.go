@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var linkRe = regexp.MustCompile(`(?:href|src)="([^"]+)"`)
+var linkRe = regexp.MustCompile(`(?:href|src)=(?:"([^"]+)"|'([^']+)')`)
 
 // BrokenLink is one internal reference with no file behind it.
 type BrokenLink struct {
@@ -42,6 +42,9 @@ func CheckSite(outputDir string) ([]BrokenLink, error) {
 
 		for _, m := range linkRe.FindAllStringSubmatch(string(raw), -1) {
 			target := m[1]
+			if target == "" {
+				target = m[2]
+			}
 			if !isInternal(target) {
 				continue
 			}
