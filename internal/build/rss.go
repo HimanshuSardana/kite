@@ -3,6 +3,8 @@ package build
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/HimanshuSardana/kite/pkg/config"
@@ -62,7 +64,7 @@ func GenerateRSS(outputDir, configPath, siteURL string, posts []content.PostSumm
 
 	feedPath := "feed.xml"
 	if outputDir != "" && outputDir != "." {
-		feedPath = outputDir + "/feed.xml"
+		feedPath = filepath.Join(outputDir, "feed.xml")
 	}
 
 	if err := os.WriteFile(feedPath, []byte(rssContent), 0644); err != nil {
@@ -105,23 +107,10 @@ func renderRSS(feed RSSFeed) string {
 }
 
 func escapeXML(s string) string {
-	s = replaceAll(s, "&", "&amp;")
-	s = replaceAll(s, "<", "&lt;")
-	s = replaceAll(s, ">", "&gt;")
-	s = replaceAll(s, "\"", "&quot;")
-	s = replaceAll(s, "'", "&apos;")
+	s = strings.ReplaceAll(s, "&", "&amp;")
+	s = strings.ReplaceAll(s, "<", "&lt;")
+	s = strings.ReplaceAll(s, ">", "&gt;")
+	s = strings.ReplaceAll(s, "\"", "&quot;")
+	s = strings.ReplaceAll(s, "'", "&apos;")
 	return s
-}
-
-func replaceAll(s, old, new string) string {
-	result := ""
-	for i := 0; i < len(s); i++ {
-		if i+len(old) <= len(s) && s[i:i+len(old)] == old {
-			result += new
-			i += len(old) - 1
-		} else {
-			result += string(s[i])
-		}
-	}
-	return result
 }

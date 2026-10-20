@@ -41,7 +41,7 @@ func GenerateSitemap(outputDir, siteURL string, posts []content.PostSummary, tag
 
 	sitemapPath := "sitemap.xml"
 	if outputDir != "" && outputDir != "." {
-		sitemapPath = outputDir + "/sitemap.xml"
+		sitemapPath = filepath.Join(outputDir, "sitemap.xml")
 	}
 
 	if err := os.WriteFile(sitemapPath, []byte(s), 0o644); err != nil {
