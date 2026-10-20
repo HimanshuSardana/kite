@@ -42,7 +42,14 @@ func Execute() {
 }
 
 func runInit(args []string) {
-	if err := RunInit(); err != nil {
+	force := false
+	for _, a := range args[2:] {
+		if a == "--force" || a == "-f" {
+			force = true
+			break
+		}
+	}
+	if err := RunInit(force); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}

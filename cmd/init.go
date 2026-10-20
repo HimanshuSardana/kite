@@ -1,14 +1,18 @@
 package cmd
 
 import (
+	"archive/zip"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -231,39 +235,193 @@ func copyDir(src, dst string) error {
 	})
 }
 
-func downloadThemes() error {
-	themesURL := "https://github.com/HimanshuSardana/kite/archive/refs/heads/main.zip"
+const themesURL = "https://github.com/HimanshuSardana/kite/archive/refs/heads/main.zip"
 
+// siteConfig mirrors the on-disk config.yaml schema. It is marshaled with
+// yaml.v2 so user input containing quotes or newlines stays valid YAML.
+type siteConfig struct {
+	SiteTitle    string `yaml:"siteTitle"`
+	AuthorName   string `yaml:"authorName"`
+	AuthorRole   string `yaml:"authorRole"`
+	AuthorBio    string `yaml:"authorBio"`
+	DefaultTheme string `yaml:"defaultTheme"`
+}
+
+func marshalSiteConfig(siteTitle, authorName, authorRole, authorBio, theme string) ([]byte, error) {
+	cfg := siteConfig{
+		SiteTitle:    siteTitle,
+		AuthorName:   authorName,
+		AuthorRole:   authorRole,
+		AuthorBio:    authorBio,
+		DefaultTheme: theme,
+	}
+	return yaml.Marshal(&cfg)
+}
+
+// alreadyInitialized reports whether configPath exists or contentDir exists
+// and is non-empty — i.e. the directory looks like an initialized site.
+func alreadyInitialized(configPath, contentDir string) bool {
+	if st, err := os.Stat(configPath); err == nil && !st.IsDir() {
+		return true
+	}
+	entries, err := os.ReadDir(contentDir)
+	if err != nil {
+		return false
+	}
+	return len(entries) > 0
+}
+
+func downloadThemes() error {
 	fmt.Println("  Downloading themes from GitHub...")
 
-	cmd := exec.Command("curl", "-sL", themesURL, "-o", "kite-main.zip")
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to download: %w", err)
+	tmpDir, err := os.MkdirTemp("", "kite-themes-*")
+	if err != nil {
+		return fmt.Errorf("creating temp dir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	zipPath := filepath.Join(tmpDir, "kite-main.zip")
+	if err := downloadURLToFile(themesURL, zipPath); err != nil {
+		return err
 	}
 
-	cmd = exec.Command("unzip", "-qo", "-d", ".", "kite-main.zip")
-	if err := cmd.Run(); err != nil {
-		os.Remove("kite-main.zip")
-		return fmt.Errorf("failed to extract: %w", err)
+	extractDir := filepath.Join(tmpDir, "extracted")
+	if err := os.MkdirAll(extractDir, 0o755); err != nil {
+		return fmt.Errorf("creating extract dir: %w", err)
+	}
+	if err := extractZipDir(zipPath, extractDir); err != nil {
+		return err
+	}
+
+	srcThemes, err := findThemesDir(extractDir)
+	if err != nil {
+		return err
 	}
 
 	if err := os.MkdirAll("themes", 0o755); err != nil {
 		return err
 	}
 
-	cmd = exec.Command("cp", "-r", "kite-main/themes/.", "themes/")
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to copy themes: %w", err)
+	// Same semantics as `cp -r <src>/themes/. themes/`: copy each entry.
+	entries, err := os.ReadDir(srcThemes)
+	if err != nil {
+		return fmt.Errorf("reading extracted themes: %w", err)
 	}
-
-	os.Remove("kite-main.zip")
-	os.RemoveAll("kite-main")
+	for _, e := range entries {
+		src := filepath.Join(srcThemes, e.Name())
+		dst := filepath.Join("themes", e.Name())
+		if e.IsDir() {
+			if err := copyDir(src, dst); err != nil {
+				return fmt.Errorf("copying theme %s: %w", e.Name(), err)
+			}
+			continue
+		}
+		data, err := os.ReadFile(src)
+		if err != nil {
+			return fmt.Errorf("copying theme file %s: %w", e.Name(), err)
+		}
+		if err := os.WriteFile(dst, data, 0o644); err != nil {
+			return fmt.Errorf("copying theme file %s: %w", e.Name(), err)
+		}
+	}
 
 	fmt.Println("  ✓ Themes downloaded successfully")
 	return nil
 }
 
-func RunInit() error {
+func downloadURLToFile(url, dest string) error {
+	resp, err := http.Get(url) //nolint:gosec,noctx
+	if err != nil {
+		return fmt.Errorf("failed to download: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to download: unexpected status %s", resp.Status)
+	}
+	out, err := os.Create(dest)
+	if err != nil {
+		return fmt.Errorf("failed to download: %w", err)
+	}
+	if _, err := io.Copy(out, resp.Body); err != nil {
+		out.Close()
+		return fmt.Errorf("failed to download: %w", err)
+	}
+	if err := out.Close(); err != nil {
+		return fmt.Errorf("failed to download: %w", err)
+	}
+	return nil
+}
+
+func extractZipDir(zipPath, dest string) error {
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return fmt.Errorf("failed to extract: %w", err)
+	}
+	defer r.Close()
+	for _, f := range r.File {
+		// Guard against Zip Slip.
+		clean := filepath.Clean(f.Name)
+		if strings.Contains(clean, "..") {
+			return fmt.Errorf("failed to extract: unsafe path %q", f.Name)
+		}
+		target := filepath.Join(dest, clean)
+		if !strings.HasPrefix(target, filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("failed to extract: unsafe path %q", f.Name)
+		}
+		if f.FileInfo().IsDir() {
+			if err := os.MkdirAll(target, 0o755); err != nil {
+				return fmt.Errorf("failed to extract: %w", err)
+			}
+			continue
+		}
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			return fmt.Errorf("failed to extract: %w", err)
+		}
+		rc, err := f.Open()
+		if err != nil {
+			return fmt.Errorf("failed to extract: %w", err)
+		}
+		data, err := io.ReadAll(rc)
+		rc.Close()
+		if err != nil {
+			return fmt.Errorf("failed to extract: %w", err)
+		}
+		if err := os.WriteFile(target, data, f.Mode()); err != nil {
+			return fmt.Errorf("failed to extract: %w", err)
+		}
+	}
+	return nil
+}
+
+// findThemesDir locates the extracted "themes" directory. The archive is
+// expected to unpack to <extractDir>/kite-main/themes, but fall back to a
+// walk so a changed top-level directory name does not break extraction.
+func findThemesDir(extractDir string) (string, error) {
+	preferred := filepath.Join(extractDir, "kite-main", "themes")
+	if st, err := os.Stat(preferred); err == nil && st.IsDir() {
+		return preferred, nil
+	}
+	var found string
+	err := filepath.Walk(extractDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() && info.Name() == "themes" {
+			found = path
+			return filepath.SkipDir
+		}
+		return nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("locating themes: %w", err)
+	}
+	if found == "" {
+		return "", fmt.Errorf("locating themes: no themes directory in archive")
+	}
+	return found, nil
+}
+
+func RunInit(force bool) error {
 	m := &InitModel{}
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
@@ -285,6 +443,10 @@ func RunInit() error {
 	theme := m.theme
 	if theme == "" {
 		theme = "modern-light"
+	}
+
+	if !force && alreadyInitialized("config.yaml", "content") {
+		return fmt.Errorf("current directory looks already initialized (found existing config.yaml or non-empty content/); re-running `kite init` would overwrite your site — pass --force to proceed")
 	}
 
 	dirs := []string{"content", "output", "static", "themes"}
@@ -320,14 +482,12 @@ func RunInit() error {
 		siteTitle = m.blogName
 	}
 
-	configContent := fmt.Sprintf(`siteTitle: "%s"
-authorName: "%s"
-authorRole: "%s"
-authorBio: "%s"
-defaultTheme: "%s"
-`, siteTitle, m.authorName, m.authorRole, m.authorBio, theme)
+	configContent, err := marshalSiteConfig(siteTitle, m.authorName, m.authorRole, m.authorBio, theme)
+	if err != nil {
+		return fmt.Errorf("encoding config: %w", err)
+	}
 
-	if err := os.WriteFile("config.yaml", []byte(configContent), 0o644); err != nil {
+	if err := os.WriteFile("config.yaml", configContent, 0o644); err != nil {
 		return fmt.Errorf("writing config: %w", err)
 	}
 
