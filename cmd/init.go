@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbletea"
@@ -42,6 +43,24 @@ var (
 			Foreground(lipgloss.Color("240"))
 )
 
+// initThemes is the single source of truth for the themes shipped with
+// kite and offered by the `kite init` picker.
+var initThemes = []string{
+	"modern-light",
+	"modern-dark",
+	"modern-dark-2",
+	"modern-dark-catppuccin",
+	"everforest",
+	"gruvbox",
+	"rose-pine",
+	"terminal-gruvbox",
+	"tufte",
+	"magical",
+	"notes",
+	"minimal-notes",
+	"flectar",
+}
+
 type InitModel struct {
 	step        int
 	blogName    string
@@ -57,20 +76,7 @@ type InitModel struct {
 }
 
 func (m *InitModel) Init() tea.Cmd {
-	themes := []string{
-		"modern-light",
-		"modern-dark",
-		"modern-dark-2",
-		"modern-dark-catppuccin",
-		"everforest",
-		"gruvbox",
-		"rose-pine",
-		"terminal-gruvbox",
-		"tufte",
-		"notes",
-		"minimal-notes",
-		"flectar",
-	}
+	themes := initThemes
 
 	items := make([]list.Item, len(themes))
 	for i, t := range themes {
@@ -124,15 +130,20 @@ func (m *InitModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.handleEnter()
 		case "backspace":
 			if len(m.inputBuffer) > 0 {
-				m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+				runes := []rune(m.inputBuffer)
+				m.inputBuffer = string(runes[:len(runes)-1])
 			}
-		case "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-			"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-			"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-			"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-			"-", "_", " ", ".":
-			m.inputBuffer += msg.String()
+		default:
+			if msg.Type == tea.KeyRunes || msg.Type == tea.KeySpace {
+				if msg.Alt {
+					break
+				}
+				for _, r := range msg.Runes {
+					if unicode.IsPrint(r) {
+						m.inputBuffer += string(r)
+					}
+				}
+			}
 		}
 	}
 	return m, nil
