@@ -59,6 +59,10 @@ func Build(opts BuildOptions) error {
 
 	themePath := themes.GetThemePath(opts.ThemesDir, opts.ThemeName)
 
+	if !themes.ThemeExists(opts.ThemesDir, opts.ThemeName) {
+		return fmt.Errorf("loading theme %q: theme directory %q does not exist", opts.ThemeName, themePath)
+	}
+
 	files, err := content.ListContentFiles(opts.ContentDir)
 	if err != nil {
 		return fmt.Errorf("listing content files: %w", err)
@@ -108,7 +112,7 @@ func Build(opts BuildOptions) error {
 
 		tmpl, err := LoadTemplate(themePath, "layout.html")
 		if err != nil {
-			log.Fatalf("Error loading template: %v", err)
+			return fmt.Errorf("loading theme %q: %w", opts.ThemeName, err)
 		}
 
 		page := Page{
@@ -178,21 +182,21 @@ func Build(opts BuildOptions) error {
 	return nil
 }
 
-func ListThemes(themesDir string) []string {
+func ListThemes(themesDir string) ([]string, error) {
 	if themesDir == "" {
 		themesDir = DefaultThemesDir
 	}
 
 	themeList, err := themes.List(themesDir)
 	if err != nil {
-		log.Fatal("Error:", err)
+		return nil, fmt.Errorf("listing themes: %w", err)
 	}
 
 	result := make([]string, len(themeList))
 	for i, t := range themeList {
 		result[i] = t.Name
 	}
-	return result
+	return result, nil
 }
 
 func ShowHelpMessage() {
