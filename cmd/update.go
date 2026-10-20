@@ -27,16 +27,20 @@ const (
 const updateHelp = `Update kite to the latest GitHub release.
 
 USAGE:
-  kite update [--check] [--force]
+  kite update [--check] [--force] [--insecure]
 
 FLAGS:
   --check       Only check for updates, don't install anything
   --force, -f   Reinstall even if already on the latest version
+  --insecure    Skip checksum verification when the release has no
+                checksums file or no entry for the asset (not recommended)
   -h, --help    Show this help message
 
 DESCRIPTION:
   Downloads the prebuilt binary for your platform from the latest
   GitHub release and swaps it over the current executable.
+  Downloads are verified against the release checksums file;
+  verification failures abort the update unless --insecure is given.
   Set GITHUB_TOKEN to raise the API rate limit.
 `
 
@@ -55,12 +59,15 @@ var updateClient = &http.Client{Timeout: 30 * time.Second}
 func runUpdate(args []string) {
 	checkOnly := false
 	force := false
+	insecure := false
 	for _, a := range args[2:] {
 		switch a {
 		case "--check":
 			checkOnly = true
 		case "--force", "-f":
 			force = true
+		case "--insecure":
+			insecure = true
 		case "-h", "--help":
 			fmt.Print(updateHelp)
 			return
@@ -96,7 +103,7 @@ func runUpdate(args []string) {
 	}
 	fmt.Printf("Downloading %s...\n", asset.Name)
 
-	if err := installAsset(rel, asset); err != nil {
+	if err := installAsset(rel, asset, insecure); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: update failed: %v\n", err)
 		os.Exit(1)
 	}
@@ -214,20 +221,68 @@ func downloadFile(url string) (string, error) {
 	return tmp.Name(), nil
 }
 
-// verifyChecksum checks the downloaded archive against checksums.txt when the
-// release publishes one; it warns (but proceeds) when it doesn't.
-func verifyChecksum(rel *githubRelease, archivePath, assetName string) error {
-	var sums *releaseAsset
+// findChecksumsAsset locates the release checksums file, if any.
+func findChecksumsAsset(rel *githubRelease) *releaseAsset {
 	for i := range rel.Assets {
 		n := strings.ToLower(rel.Assets[i].Name)
 		if n == "checksums.txt" || n == "sha256sums.txt" || n == "sha256sums" {
-			sums = &rel.Assets[i]
-			break
+			return &rel.Assets[i]
 		}
 	}
+	return nil
+}
+
+// lookupChecksum parses a checksums file body and returns the expected hex
+// digest for assetName, accepting "<hash>  <name>" lines with an optional
+// leading "*" (binary-mode marker) and optional directory prefix.
+func lookupChecksum(checksumsText, assetName string) (string, bool) {
+	for _, line := range strings.Split(checksumsText, "\n") {
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+		name := strings.TrimPrefix(fields[1], "*")
+		if name == assetName || strings.HasSuffix(name, "/"+assetName) {
+			return fields[0], true
+		}
+	}
+	return "", false
+}
+
+// verifyFileChecksum checks that the file at path hashes to want (hex SHA-256).
+func verifyFileChecksum(path, want, assetName string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return err
+	}
+	if got := hex.EncodeToString(h.Sum(nil)); !strings.EqualFold(got, want) {
+		return fmt.Errorf("checksum mismatch for %s", assetName)
+	}
+	return nil
+}
+
+// ensureExecutable sets the executable bit so an installed binary runs.
+func ensureExecutable(path string) error {
+	return os.Chmod(path, 0o755)
+}
+
+// verifyChecksum checks the downloaded archive against checksums.txt.
+// It fails closed when the release has no checksums file or no entry for
+// the asset, unless insecure is true (from --insecure), in which case it
+// warns and proceeds as before.
+func verifyChecksum(rel *githubRelease, archivePath, assetName string, insecure bool) error {
+	sums := findChecksumsAsset(rel)
 	if sums == nil {
-		fmt.Println("Warning: release has no checksums file, skipping verification.")
-		return nil
+		if insecure {
+			fmt.Println("Warning: release has no checksums file, skipping verification.")
+			return nil
+		}
+		return fmt.Errorf("release has no checksums file, refusing to install unverified download (rerun with --insecure to bypass)")
 	}
 
 	sumsPath, err := downloadFile(sums.BrowserDownloadURL)
@@ -240,33 +295,18 @@ func verifyChecksum(rel *githubRelease, archivePath, assetName string) error {
 	if err != nil {
 		return fmt.Errorf("reading checksums: %w", err)
 	}
-	want := ""
-	for _, line := range strings.Split(string(raw), "\n") {
-		fields := strings.Fields(line)
-		if len(fields) < 2 {
-			continue
+
+	want, ok := lookupChecksum(string(raw), assetName)
+	if !ok {
+		if insecure {
+			fmt.Printf("Warning: no checksum entry for %s, skipping verification.\n", assetName)
+			return nil
 		}
-		name := strings.TrimPrefix(fields[1], "*")
-		if name == assetName || strings.HasSuffix(name, "/"+assetName) {
-			want = fields[0]
-			break
-		}
-	}
-	if want == "" {
-		return fmt.Errorf("no checksum entry for %s", assetName)
+		return fmt.Errorf("no checksum entry for %s (rerun with --insecure to bypass)", assetName)
 	}
 
-	f, err := os.Open(archivePath)
-	if err != nil {
+	if err := verifyFileChecksum(archivePath, want, assetName); err != nil {
 		return err
-	}
-	defer f.Close()
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return err
-	}
-	if got := hex.EncodeToString(h.Sum(nil)); !strings.EqualFold(got, want) {
-		return fmt.Errorf("checksum mismatch for %s", assetName)
 	}
 	fmt.Println("Checksum verified.")
 	return nil
@@ -286,7 +326,12 @@ func extractBinary(archivePath, assetName string) (string, error) {
 	case strings.HasSuffix(assetName, ".zip"):
 		return extractZip(archivePath, binName)
 	default:
-		return archivePath, nil // bare binary asset
+		// Bare binary asset: the download itself is the executable, but
+		// downloadFile creates temp files without the exec bit, so set it.
+		if err := ensureExecutable(archivePath); err != nil {
+			return "", err
+		}
+		return archivePath, nil
 	}
 }
 
@@ -369,14 +414,14 @@ func extractZip(archivePath, binName string) (string, error) {
 	return "", fmt.Errorf("archive contains no %s binary", binName)
 }
 
-func installAsset(rel *githubRelease, asset *releaseAsset) error {
+func installAsset(rel *githubRelease, asset *releaseAsset, insecure bool) error {
 	archivePath, err := downloadFile(asset.BrowserDownloadURL)
 	if err != nil {
 		return fmt.Errorf("downloading %s: %w", asset.Name, err)
 	}
 	defer os.Remove(archivePath)
 
-	if err := verifyChecksum(rel, archivePath, asset.Name); err != nil {
+	if err := verifyChecksum(rel, archivePath, asset.Name, insecure); err != nil {
 		return err
 	}
 
@@ -386,6 +431,12 @@ func installAsset(rel *githubRelease, asset *releaseAsset) error {
 	}
 	if binPath != archivePath {
 		defer os.Remove(binPath)
+	}
+
+	// Centralize the exec bit: whatever extractBinary returned must be
+	// executable before it is renamed over the current binary.
+	if err := ensureExecutable(binPath); err != nil {
+		return fmt.Errorf("making binary executable: %w", err)
 	}
 
 	exe, err := os.Executable()
