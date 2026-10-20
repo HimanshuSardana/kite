@@ -61,7 +61,11 @@ func ListContentFiles(contentDir string) ([]ContentFile, error) {
 		}
 
 		if strings.HasSuffix(d.Name(), ".md") {
-			slug := strings.TrimSuffix(d.Name(), ".md")
+			rel, err := filepath.Rel(contentDir, path)
+			if err != nil {
+				return err
+			}
+			slug := filepath.ToSlash(strings.TrimSuffix(rel, ".md"))
 			files = append(files, ContentFile{
 				Path: path,
 				Slug: slug,
@@ -84,6 +88,7 @@ func GetOutputPath(contentDir, contentPath, outputDir string) (string, error) {
 		return "", err
 	}
 
-	outputFilePath := filepath.Join(outputDir, strings.Replace(relPath, ".md", "/index.html", 1))
+	trimmed := strings.TrimSuffix(relPath, ".md")
+	outputFilePath := filepath.Join(outputDir, trimmed, "index.html")
 	return outputFilePath, nil
 }

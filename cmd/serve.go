@@ -11,13 +11,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/HimanshuSardana/kite/internal/build"
 	"github.com/HimanshuSardana/kite/pkg/config"
+	"github.com/fsnotify/fsnotify"
 )
 
 var (
-	reloadChan = make(chan struct{})
+	reloadChan  = make(chan struct{})
 	reloadMutex sync.RWMutex
 )
 
