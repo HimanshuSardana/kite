@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/HimanshuSardana/kite/internal/build"
@@ -16,10 +15,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-var (
-	reloadChan  = make(chan struct{})
-	reloadMutex sync.RWMutex
-)
+var liveReload = newReloadHub()
 
 func runServe(args []string) {
 	themeName := DefaultTheme
@@ -238,9 +234,7 @@ func injectLiveReloadScript() {
 }
 
 func triggerReload() {
-	go func() {
-		reloadChan <- struct{}{}
-	}()
+	liveReload.broadcast()
 }
 
 func liveReloadHandler(w http.ResponseWriter, r *http.Request) {
@@ -250,10 +244,13 @@ func liveReloadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
+	ch := liveReload.subscribe()
+	defer liveReload.unsubscribe(ch)
+
 	// Keep connection open and send reload events
 	for {
 		select {
-		case <-reloadChan:
+		case <-ch:
 			fmt.Fprintf(w, "event: reload\ndata: {}\n\n")
 			if f, ok := w.(http.Flusher); ok {
 				f.Flush()
