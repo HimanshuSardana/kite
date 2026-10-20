@@ -114,23 +114,17 @@ func tagSlugs(tags []TagInfo) []string {
 	return slugs
 }
 
-// renderTagPage renders like RenderPage but pins relative theme assets
-// (e.g. ../style.css) to the site root with a <base> tag: tag pages live
-// two levels deep (/tag/<slug>/), where theme-relative paths would 404.
-// Tag content uses absolute links and carries no TOC, so this is safe.
+// renderTagPage renders a tag page like RenderPage. Theme assets use
+// root-absolute URLs (e.g. /style.css), so no <base> tag is needed.
 func renderTagPage(tmpl *template.Template, outputPath string, page Page) error {
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, page); err != nil {
 		return fmt.Errorf("executing template: %w", err)
 	}
-	html := buf.String()
-	if !strings.Contains(html, "<base") {
-		html = strings.Replace(html, "<head>", "<head>\n<base href=\"/\">", 1)
-	}
 	if err := os.MkdirAll(dirOf(outputPath), 0o755); err != nil {
 		return fmt.Errorf("creating directories: %w", err)
 	}
-	if err := os.WriteFile(outputPath, []byte(html), 0o644); err != nil {
+	if err := os.WriteFile(outputPath, buf.Bytes(), 0o644); err != nil {
 		return fmt.Errorf("writing tag page: %w", err)
 	}
 	return nil

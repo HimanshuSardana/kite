@@ -175,6 +175,7 @@ func Build(opts BuildOptions) error {
 		fmt.Printf("Copied %d static files\n", n)
 	}
 
+	CopyThemeAssets(themePath, opts.OutputDir)
 	return nil
 }
 
