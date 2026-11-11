@@ -1,13 +1,99 @@
 package build
 
 import (
+	"image"
+	"image/png"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/HimanshuSardana/kite/pkg/content"
 )
+
+func writePNG(t *testing.T, path string, width, height int) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	img := image.NewNRGBA(image.Rect(0, 0, width, height))
+	if err := png.Encode(f, img); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writePostPage(t *testing.T, outputDir, slug, title string) string {
+	t.Helper()
+	path := filepath.Join(outputDir, slug, "index.html")
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	html := "<html><head><title>" + title + "</title></head><body>post</body></html>"
+	if err := os.WriteFile(path, []byte(html), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func TestInjectOGMetaAddsTagsOnce(t *testing.T) {
+	outputDir := t.TempDir()
+	posts := []content.PostSummary{{Title: "Hello & <World>", Slug: "hello"}}
+	pagePath := writePostPage(t, outputDir, "hello", "Hello")
+	writePNG(t, filepath.Join(outputDir, "hello", "og.png"), 1200, 630)
+
+	n, err := InjectOGMeta(outputDir, "https://example.com/", posts)
+	if err != nil {
+		t.Fatalf("InjectOGMeta: %v", err)
+	}
+	if n != 1 {
+		t.Fatalf("injected %d pages, want 1", n)
+	}
+
+	raw, err := os.ReadFile(pagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	page := string(raw)
+	for _, want := range []string{
+		`property="og:image" content="https://example.com/hello/og.png"`,
+		`property="og:image:width" content="1200"`,
+		`property="og:image:height" content="630"`,
+		`property="og:url" content="https://example.com/hello/"`,
+		`property="og:title" content="Hello &amp; &lt;World&gt;"`,
+		`name="twitter:card" content="summary_large_image"`,
+	} {
+		if !strings.Contains(page, want) {
+			t.Errorf("page missing %q\n%s", want, page)
+		}
+	}
+	if strings.Count(page, `property="og:image"`) != 1 {
+		t.Errorf("og:image injected more than once:\n%s", page)
+	}
+
+	// Rebuilds must not stack tags on top of each other.
+	if n, err := InjectOGMeta(outputDir, "https://example.com", posts); err != nil || n != 0 {
+		t.Fatalf("second run: injected %d, err %v; want 0, nil", n, err)
+	}
+}
+
+func TestInjectOGMetaSkipsPostsWithoutCard(t *testing.T) {
+	outputDir := t.TempDir()
+	writePostPage(t, outputDir, "no-card", "No Card")
+
+	n, err := InjectOGMeta(outputDir, "https://example.com", []content.PostSummary{{Slug: "no-card"}})
+	if err != nil {
+		t.Fatalf("InjectOGMeta: %v", err)
+	}
+	if n != 0 {
+		t.Fatalf("injected %d pages, want 0", n)
+	}
+}
 
 func TestGenerateOGImagesSkipsMissingTemplate(t *testing.T) {
 	outputDir := t.TempDir()

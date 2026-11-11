@@ -2,6 +2,7 @@ package build
 
 import (
 	"fmt"
+	"html"
 	"image/png"
 	"io"
 	"log"
@@ -108,6 +109,65 @@ func ogDate(post content.PostSummary) string {
 		return t.Format("Jan 2, 2006")
 	}
 	return post.Date
+}
+
+// InjectOGMeta adds Open Graph and Twitter card tags to every post page that
+// has a card beside it. Themes stay free of SEO plumbing, and rebuilds are
+// idempotent because pages that already declare an og:image are left alone.
+func InjectOGMeta(outputDir, siteURL string, posts []content.PostSummary) (int, error) {
+	baseURL := strings.TrimSuffix(siteURL, "/")
+	injected := 0
+
+	for _, post := range posts {
+		imagePath := filepath.Join(outputDir, post.Slug, "og.png")
+		width, height, err := pngSize(imagePath)
+		if err != nil {
+			continue // no card generated for this post
+		}
+
+		pagePath := filepath.Join(outputDir, post.Slug, "index.html")
+		info, err := os.Stat(pagePath)
+		if err != nil {
+			continue
+		}
+		raw, err := os.ReadFile(pagePath)
+		if err != nil {
+			return injected, err
+		}
+		page := string(raw)
+		if strings.Contains(page, `property="og:image"`) {
+			continue
+		}
+		idx := strings.Index(page, "</head>")
+		if idx == -1 {
+			continue
+		}
+
+		pageURL := baseURL + "/" + post.Slug + "/"
+		imageURL := pageURL + "og.png"
+		page = page[:idx] + ogMetaTags(post.Title, pageURL, imageURL, width, height) + page[idx:]
+
+		if err := os.WriteFile(pagePath, []byte(page), info.Mode().Perm()); err != nil {
+			return injected, fmt.Errorf("writing og meta tags: %w", err)
+		}
+		injected++
+	}
+	return injected, nil
+}
+
+func ogMetaTags(title, pageURL, imageURL string, width, height int) string {
+	esc := html.EscapeString
+	return fmt.Sprintf(`  <meta property="og:type" content="article">
+  <meta property="og:title" content="%s">
+  <meta property="og:url" content="%s">
+  <meta property="og:image" content="%s">
+  <meta property="og:image:width" content="%d">
+  <meta property="og:image:height" content="%d">
+  <meta property="og:image:alt" content="%s">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="%s">
+  <meta name="twitter:image" content="%s">
+`, esc(title), esc(pageURL), esc(imageURL), width, height, esc(title), esc(title), esc(imageURL))
 }
 
 func pngSize(path string) (int, int, error) {

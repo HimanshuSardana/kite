@@ -191,6 +191,12 @@ func Build(opts BuildOptions) error {
 		fmt.Printf("Feed discovery link added to %d pages\n", n)
 	}
 
+	if n, err := InjectOGMeta(opts.OutputDir, siteURL, summaries); err != nil {
+		log.Printf("Error injecting OG meta tags: %v", err)
+	} else if n > 0 {
+		fmt.Printf("OG meta tags added to %d pages\n", n)
+	}
+
 	if n, err := CopyStatic(opts.StaticDir, opts.OutputDir); err != nil {
 		log.Printf("Error copying static files: %v", err)
 	} else if n > 0 {
