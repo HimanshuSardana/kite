@@ -57,6 +57,21 @@ func Build(opts BuildOptions) error {
 		log.Printf("Warning: Could not load config: %v", err)
 	}
 
+	siteURL := "https://your-site.com"
+	ogTemplate := DefaultOGTemplate
+	ogAuthor := ""
+	ogSiteTitle := ""
+	if cfg != nil {
+		if cfg.SiteURL != "" {
+			siteURL = cfg.SiteURL
+		}
+		if cfg.OGTemplate != "" {
+			ogTemplate = cfg.OGTemplate
+		}
+		ogAuthor = cfg.AuthorName
+		ogSiteTitle = cfg.SiteTitle
+	}
+
 	themePath := themes.GetThemePath(opts.ThemesDir, opts.ThemeName)
 
 	if !themes.ThemeExists(opts.ThemesDir, opts.ThemeName) {
@@ -140,6 +155,13 @@ func Build(opts BuildOptions) error {
 		fmt.Printf("Skipped %d draft(s) (build with --drafts to include)\n", skippedDrafts)
 	}
 
+	// Cards are built before RenderHomePage rewrites summary dates in place.
+	if n, err := GenerateOGImages(opts.OutputDir, ogTemplate, siteURL, ogAuthor, ogSiteTitle, summaries); err != nil {
+		log.Printf("Error generating OG images: %v", err)
+	} else if n > 0 {
+		fmt.Printf("Generated %d OG image(s)\n", n)
+	}
+
 	// Collect before RenderHomePage: it reformats summary dates in place.
 	tags := CollectTags(summaries)
 
@@ -151,10 +173,6 @@ func Build(opts BuildOptions) error {
 		log.Printf("Error rendering tag pages: %v", err)
 	}
 
-	siteURL := "https://your-site.com"
-	if cfg != nil && cfg.SiteURL != "" {
-		siteURL = cfg.SiteURL
-	}
 	if err := GenerateRSS(opts.OutputDir, opts.ConfigPath, siteURL, summaries); err != nil {
 		log.Printf("Error generating RSS feed: %v", err)
 	}

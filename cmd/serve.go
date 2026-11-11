@@ -116,7 +116,21 @@ func watchAndRebuild(themeName string, includeDrafts bool) {
 		log.Printf("Warning: Could not watch config.yaml: %v", err)
 	}
 
-	log.Println("Watching for changes in content/, themes/, static/, and config.yaml...")
+	// Watch the Typst card template so editing it rebuilds the og.png files.
+	ogTemplate := build.DefaultOGTemplate
+	if cfg, err := config.Load("./config.yaml"); err == nil && cfg.OGTemplate != "" {
+		ogTemplate = cfg.OGTemplate
+	}
+	watched := []string{"content/", "themes/", "static/", "config.yaml"}
+	if _, err := os.Stat("./" + ogTemplate); err == nil {
+		if err := watcher.Add("./" + ogTemplate); err != nil {
+			log.Printf("Warning: Could not watch %s: %v", ogTemplate, err)
+		} else {
+			watched = append(watched, ogTemplate)
+		}
+	}
+
+	log.Printf("Watching for changes in %s...", strings.Join(watched, ", "))
 
 	var debounceTimer *time.Timer
 

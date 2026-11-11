@@ -13,6 +13,9 @@ type Config struct {
 	AuthorBio    string `yaml:"authorBio"`
 	DefaultTheme string `yaml:"defaultTheme"`
 	SiteURL      string `yaml:"siteUrl"`
+	// OGTemplate is the Typst source for open graph cards. Empty means
+	// build.DefaultOGTemplate ("og.typ" in the project root).
+	OGTemplate string `yaml:"ogTemplate"`
 }
 
 func Load(path string) (*Config, error) {
